@@ -1,11 +1,12 @@
 """
-Models for YourResourceModel
+Models for Products
 
 All of the models are stored in this module
 """
 
 import logging
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime,timezone
 
 logger = logging.getLogger("flask.app")
 
@@ -17,25 +18,31 @@ class DataValidationError(Exception):
     """Used for an data validation errors when deserializing"""
 
 
-class YourResourceModel(db.Model):
+class Products(db.Model):
     """
-    Class that represents a YourResourceModel
+    Class that represents a Products
     """
 
     ##################################################
     # Table Schema
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(63))
+    name = db.Column(db.String(63), nullable=False)
+    description = db.Column(db.String(1023))
+    price = db.Column(db.Numeric(14, 2), nullable=False)
 
-    # Todo: Place the rest of your schema here...
+    image_url = db.Column(db.String(1023))
+    category = db.Column(db.String(63))
+    availability = db.Column(db.Boolean, default=True, nullable=False)
+    created_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     def __repr__(self):
-        return f"<YourResourceModel {self.name} id=[{self.id}]>"
+        return f"<Products {self.name} id=[{self.id}]>"
 
     def create(self):
         """
-        Creates a YourResourceModel to the database
+        Creates a Products to the database
         """
         logger.info("Creating %s", self.name)
         self.id = None  # pylint: disable=invalid-name
@@ -49,7 +56,7 @@ class YourResourceModel(db.Model):
 
     def update(self):
         """
-        Updates a YourResourceModel to the database
+        Updates a Products to the database
         """
         logger.info("Saving %s", self.name)
         try:
@@ -60,7 +67,7 @@ class YourResourceModel(db.Model):
             raise DataValidationError(e) from e
 
     def delete(self):
-        """Removes a YourResourceModel from the data store"""
+        """Removes a Products from the data store"""
         logger.info("Deleting %s", self.name)
         try:
             db.session.delete(self)
@@ -71,27 +78,43 @@ class YourResourceModel(db.Model):
             raise DataValidationError(e) from e
 
     def serialize(self):
-        """Serializes a YourResourceModel into a dictionary"""
-        return {"id": self.id, "name": self.name}
+        """Serializes a Products into a dictionary"""
+        return {"id": self.id, 
+                "name": self.name,
+                "price": str(self.price), # Convert Decimal to string for JSON serialization since Json does not support Decimal
+                "description": self.description,
+                "image_url": self.image_url,
+                "category": self.category,
+                "availability": self.availability,
+                "created_date": self.created_date,
+                "updated_date": self.updated_date
+                }
 
     def deserialize(self, data):
         """
-        Deserializes a YourResourceModel from a dictionary
+        Deserializes a Products from a dictionary
 
         Args:
             data (dict): A dictionary containing the resource data
         """
         try:
             self.name = data["name"]
+            self.description = data["description"]
+            self.price = data["price"]
+            self.image_url = data["image_url"]
+            self.category = data["category"]
+            self.availability = data.get("availability", True)
+            self.created_date = data.get("created_date", datetime.now(timezone.utc))
+            self.updated_date = data.get("updated_date", datetime.now(timezone.utc))
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: missing " + error.args[0]
+                "Invalid Products: missing " + error.args[0]
             ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: body of request contained bad or no data "
+                "Invalid Products: body of request contained bad or no data "
                 + str(error)
             ) from error
         return self
@@ -102,22 +125,22 @@ class YourResourceModel(db.Model):
 
     @classmethod
     def all(cls):
-        """Returns all of the YourResourceModels in the database"""
-        logger.info("Processing all YourResourceModels")
+        """Returns all of the Productss in the database"""
+        logger.info("Processing all Productss")
         return cls.query.all()
 
     @classmethod
     def find(cls, by_id):
-        """Finds a YourResourceModel by it's ID"""
+        """Finds a Products by it's ID"""
         logger.info("Processing lookup for id %s ...", by_id)
         return cls.query.session.get(cls, by_id)
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all YourResourceModels with the given name
+        """Returns all Productss with the given name
 
         Args:
-            name (string): the name of the YourResourceModels you want to match
+            name (string): the name of the Productss you want to match
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)

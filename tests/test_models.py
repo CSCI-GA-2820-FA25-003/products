@@ -19,12 +19,13 @@ Test cases for Pet Model
 """
 
 # pylint: disable=duplicate-code
+from decimal import Decimal
 import os
 import logging
 from unittest import TestCase
 from wsgi import app
-from service.models import YourResourceModel, DataValidationError, db
-from .factories import YourResourceModelFactory
+from service.models import Products, DataValidationError, db
+from .factories import ProductsFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -32,11 +33,11 @@ DATABASE_URI = os.getenv(
 
 
 ######################################################################
-#  YourResourceModel   M O D E L   T E S T   C A S E S
+#  P r o d u c t s   M O D E L   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceModel(TestCase):
-    """Test Cases for YourResourceModel Model"""
+class TestProducts(TestCase):
+    """Test Cases for Products Model"""
 
     @classmethod
     def setUpClass(cls):
@@ -54,7 +55,7 @@ class TestYourResourceModel(TestCase):
 
     def setUp(self):
         """This runs before each test"""
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Products).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -65,15 +66,28 @@ class TestYourResourceModel(TestCase):
     #  T E S T   C A S E S
     ######################################################################
 
-    def test_example_replace_this(self):
-        """It should create a YourResourceModel"""
-        # Todo: Remove this test case example
-        resource = YourResourceModelFactory()
-        resource.create()
-        self.assertIsNotNone(resource.id)
-        found = YourResourceModel.all()
+    def test_create_product(self):
+        """It should create a Products"""
+        product = ProductsFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        found = Products.all()
         self.assertEqual(len(found), 1)
-        data = YourResourceModel.find(resource.id)
-        self.assertEqual(data.name, resource.name)
+        data = Products.find(product.id)
+        self.assertEqual(data.name, product.name)
+        self.assertEqual(data.description, product.description)
+        self.assertEqual(data.price, product.price)
+        self.assertEqual(data.image_url, product.image_url)
+        self.assertEqual(data.category, product.category)
+        self.assertEqual(data.availability, product.availability)
 
-    # Todo: Add your test cases here...
+    def test_delete_product(self):
+        """It should delete a Products"""
+        product = ProductsFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+        pk = product.id
+        product.delete()
+        self.assertIsNone(Products.find(pk))
+
+    # need add more
