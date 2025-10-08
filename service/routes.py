@@ -44,3 +44,57 @@ def index():
 ######################################################################
 
 # Todo: Place your REST API code here ...
+
+
+######################################################################
+# CREATE A NEW PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_products():
+    """
+    Create a product
+    This endpoint will create a product based the data in the body that is posted
+    """
+    app.logger.info("Request to Create a product...")
+    check_content_type("application/json")
+
+    product = Products()
+    # Get the data from the request and deserialize it
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    product.deserialize(data)
+
+    # Save the new product to the database
+    product.create()
+    app.logger.info("product with new id [%s] saved!", product.id)
+
+    # Return the location of the new product
+
+    # Todo: uncomment this code when get_products is implemented 
+    #location_url = url_for("get_products", product_id=product.id, _external=True)
+
+    location_url = "unknown"
+
+    return jsonify(product.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# Checks the ContentType of a request
+######################################################################
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )
