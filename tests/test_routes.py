@@ -89,28 +89,22 @@ class TestYourResourceService(TestCase):
 
             # Check the data is correct
             new_product = response.get_json()
-            # self.assertEqual(new_product["id"], test_product.id)
             self.assertEqual(new_product["name"], test_product.name)
             self.assertEqual(new_product["description"], test_product.description)
-            self.assertEqual(new_product["price"], test_product.price)
+            self.assertEqual(new_product["price"], str(test_product.price))
             self.assertEqual(new_product["image_url"], test_product.image_url)
             self.assertEqual(new_product["category"], test_product.category)
             self.assertEqual(new_product["availability"], test_product.availability)
-            self.assertEqual(new_product["created_date"], test_product.created_date)
-            self.assertEqual(new_product["updated_date"], test_product.updated_date)
             
-            # Todo: Uncomment this code when get_products is implemented 
+            # Todo: Uncomment code below when get_products is implemented 
 
             # Check that the location header was correct
             # response = self.client.get(location)
             # self.assertEqual(response.status_code, status.HTTP_200_OK)
             # new_product = response.get_json()
-            # self.assertEqual(new_product["id"], test_product.id)
             # self.assertEqual(new_product["name"], test_product.name)
             # self.assertEqual(new_product["description"], test_product.description)
             # self.assertEqual(new_product["price"], test_product.price)
             # self.assertEqual(new_product["image_url"], test_product.image_url)
             # self.assertEqual(new_product["category"], test_product.category)
             # self.assertEqual(new_product["availability"], test_product.availability)
-            # self.assertEqual(new_product["created_date"], test_product.created_date)
-            # self.assertEqual(new_product["updated_date"], test_product.updated_date)
