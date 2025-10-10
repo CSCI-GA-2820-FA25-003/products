@@ -45,6 +45,26 @@ def index():
 
 # Todo: Place your REST API code here ...
 
+######################################################################
+# READ A product
+######################################################################
+@app.route("/products/<int:product_id>", methods=["GET"])
+def get_products(product_id):
+    """
+    Retrieve a single product
+
+    This endpoint will return a product based on it's id
+    """
+    app.logger.info("Request to Retrieve a product with id [%s]", product_id)
+
+    # Attempt to find the product and abort if not found
+    product = Products.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found.")
+
+    app.logger.info("Returning product: %s", product.name)
+    return jsonify(product.serialize()), status.HTTP_200_OK
+
 
 ######################################################################
 # CREATE A NEW PRODUCT
@@ -71,9 +91,9 @@ def create_products():
     # Return the location of the new product
 
     # Todo: uncomment this code when get_products is implemented 
-    #location_url = url_for("get_products", product_id=product.id, _external=True)
+    location_url = url_for("get_products", product_id=product.id, _external=True)
 
-    location_url = "unknown"
+    # location_url = "unknown"
 
     return jsonify(product.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
 
