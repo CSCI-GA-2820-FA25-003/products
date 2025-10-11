@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-Test cases for Pet Model
+Test cases for Product Model
 """
 
 # pylint: disable=duplicate-code
@@ -116,6 +116,18 @@ class TestProducts(TestCase):
         self.assertEqual(same_product.category, "New Category")
         self.assertEqual(same_product.availability, False)
 
+    def test_list_all_products(self):
+        """It should List all products in the database"""
+        products = Products.all()
+        self.assertEqual(products, [])
+        # Create 5 products
+        for _ in range(5):
+            product = ProductsFactory()
+            product.create()
+        # See if we get back 5 products
+        products = Products.all()
+        self.assertEqual(len(products), 5)
+
     def test_serialize_product(self):
         """It should serialize a Products"""
         product = ProductsFactory()
@@ -144,7 +156,7 @@ class TestProducts(TestCase):
         self.assertEqual(new_product.image_url, product.image_url)
         self.assertEqual(new_product.category, product.category)
         self.assertEqual(new_product.availability, product.availability)
-    
+
     def test_find_by_name_product(self):
         """It should find Products by name"""
         product = ProductsFactory()
@@ -177,11 +189,14 @@ class TestProducts(TestCase):
 
     def test_deserialize_attribute_error_raises(self):
         """It should raise DataValidationError when object lacks .get()"""
+
         class IndexOnly:
             def __init__(self, backing):
                 self._b = backing
+
             def __getitem__(self, key):
                 return self._b[key]
+
             # no get
 
         payload = {
@@ -200,8 +215,9 @@ class TestProducts(TestCase):
         """create() should rollback and raise DataValidationError when commit fails"""
         product = ProductsFactory()
         # Mock commit to raise an Exception and ensure rollback is called
-        with patch.object(db.session, "commit", side_effect=Exception("commit boom")), \
-             patch.object(db.session, "rollback") as mock_rollback:
+        with patch.object(
+            db.session, "commit", side_effect=Exception("commit boom")
+        ), patch.object(db.session, "rollback") as mock_rollback:
             with self.assertRaises(DataValidationError) as ctx:
                 product.create()
             self.assertIn("commit boom", str(ctx.exception))
@@ -213,8 +229,9 @@ class TestProducts(TestCase):
         product.create()
 
         product.description = "will fail to update"
-        with patch.object(db.session, "commit", side_effect=Exception("update boom")), \
-             patch.object(db.session, "rollback") as mock_rollback:
+        with patch.object(
+            db.session, "commit", side_effect=Exception("update boom")
+        ), patch.object(db.session, "rollback") as mock_rollback:
             with self.assertRaises(DataValidationError) as ctx:
                 product.update()
             self.assertIn("update boom", str(ctx.exception))
@@ -226,8 +243,9 @@ class TestProducts(TestCase):
         product.create()
 
         # Mock commit to raise an Exception so delete triggers rollback
-        with patch.object(db.session, "commit", side_effect=Exception("delete boom")), \
-             patch.object(db.session, "rollback") as mock_rollback:
+        with patch.object(
+            db.session, "commit", side_effect=Exception("delete boom")
+        ), patch.object(db.session, "rollback") as mock_rollback:
             with self.assertRaises(DataValidationError) as ctx:
                 product.delete()
             self.assertIn("delete boom", str(ctx.exception))

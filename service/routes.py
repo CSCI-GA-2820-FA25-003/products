@@ -45,6 +45,42 @@ def index():
 
 # Todo: Place your REST API code here ...
 
+
+######################################################################
+# LIST ALL products
+######################################################################
+@app.route("/products", methods=["GET"])
+def list_products():
+    """Returns all of the products"""
+    app.logger.info("Request for product list")
+
+    products = []
+
+    # Parse any arguments from the query string
+    category = request.args.get("category")
+    name = request.args.get("name")
+    availability = request.args.get("availability")
+
+    if category:
+        app.logger.info("Find by category: %s", category)
+        products = Products.find_by_category(category)
+    elif name:
+        app.logger.info("Find by name: %s", name)
+        products = Products.find_by_name(name)
+    elif availability:
+        app.logger.info("Find by available: %s", availability)
+        # create bool from string
+        available_value = availability.lower() in ["true", "yes", "1"]
+        products = Products.find_by_availability(available_value)
+    else:
+        app.logger.info("Find all")
+        products = Products.all()
+
+    results = [product.serialize() for product in products]
+    app.logger.info("Returning %d products", len(results))
+    return jsonify(results), status.HTTP_200_OK
+
+
 ######################################################################
 # READ A product
 ######################################################################
@@ -60,7 +96,9 @@ def get_products(product_id):
     # Attempt to find the product and abort if not found
     product = Products.find(product_id)
     if not product:
-        abort(status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found."
+        )
 
     app.logger.info("Returning product: %s", product.name)
     return jsonify(product.serialize()), status.HTTP_200_OK
@@ -90,12 +128,16 @@ def create_products():
 
     # Return the location of the new product
 
-    # Todo: uncomment this code when get_products is implemented 
+    # Todo: uncomment this code when get_products is implemented
     location_url = url_for("get_products", product_id=product.id, _external=True)
 
     # location_url = "unknown"
 
-    return jsonify(product.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+    return (
+        jsonify(product.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
 
 
 ######################################################################
