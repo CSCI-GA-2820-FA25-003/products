@@ -23,7 +23,7 @@ and Delete Products
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Products, DataValidationError
+from service.models import Products
 from service.common import status  # HTTP Status Codes
 
 
@@ -43,78 +43,43 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-######################################################################
-# UPDATE AN EXISTING PRODUCT
-######################################################################
-@app.route("/products/<int:product_id>", methods=["PUT"])
-def update_product(product_id):
-    """
-    Update a Product
-
-    This endpoint will update a Product based on the body that is posted
-    """
-    app.logger.info("Request to update product with id: %s", product_id)
-
-    check_content_type("application/json")
-
-    product = Products.find(product_id)
-    if not product:
-        abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
-
-    # Get the JSON data
-    data = request.get_json()
-    app.logger.debug("Payload = %s", data)
-
-    # Support partial updates - only update provided fields
-    try:
-        # Update only the fields that are provided in the request
-        if "name" in data:
-            product.name = data["name"]
-        if "description" in data:
-            product.description = data["description"]
-        if "price" in data:
-            product.price = data["price"]
-        if "image_url" in data:
-            product.image_url = data["image_url"]
-        if "category" in data:
-            product.category = data["category"]
-        if "availability" in data:
-            product.availability = data["availability"]
-
-        # Save the updates
-        product.update()
-
-    except (KeyError, TypeError, ValueError) as error:
-        abort(status.HTTP_400_BAD_REQUEST, str(error))
-    except DataValidationError as error:
-        abort(status.HTTP_400_BAD_REQUEST, str(error))
-
-    app.logger.info("Product with ID [%s] updated.", product.id)
-    return jsonify(product.serialize()), status.HTTP_200_OK
+# Todo: Place your REST API code here ...
 
 
 ######################################################################
-# DELETE A PRODUCT
+# LIST ALL products
 ######################################################################
-@app.route("/products/<int:product_id>", methods=["DELETE"])
-def delete_product(product_id):
-    """
-    Delete a Product
+@app.route("/products", methods=["GET"])
+def list_products():
+    """Returns all of the products"""
+    app.logger.info("Request for product list")
 
-    This endpoint will delete a Product based on the id specified in the path
-    """
-    app.logger.info("Request to delete product with id: %s", product_id)
+    products = []
 
-    # Find the product
-    product = Products.find(product_id)
-    if not product:
-        abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
+    # Parse any arguments from the query string
+    category = request.args.get("category")
+    name = request.args.get("name")
+    availability = request.args.get("availability")
 
-    # Delete the product
-    product.delete()
+    if category:
+        app.logger.info("Find by category: %s", category)
+        products = Products.find_by_category(category)
+    elif name:
+        app.logger.info("Find by name: %s", name)
+        products = Products.find_by_name(name)
+    elif availability:
+        app.logger.info("Find by available: %s", availability)
+        # create bool from string
+        available_value = availability.lower() in ["true", "yes", "1"]
+        products = Products.find_by_availability(available_value)
+    else:
+        app.logger.info("Find all")
+        products = Products.all()
 
-    app.logger.info("Product with ID [%s] deleted.", product.id)
-    return "", status.HTTP_204_NO_CONTENT
+    results = [product.serialize() for product in products]
+    app.logger.info("Returning %d products", len(results))
+    return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 # READ A product
@@ -131,7 +96,9 @@ def get_products(product_id):
     # Attempt to find the product and abort if not found
     product = Products.find(product_id)
     if not product:
-        abort(status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found."
+        )
 
     app.logger.info("Returning product: %s", product.name)
     return jsonify(product.serialize()), status.HTTP_200_OK
@@ -161,12 +128,16 @@ def create_products():
 
     # Return the location of the new product
 
-    # Todo: uncomment this code when get_products is implemented 
+    # Todo: uncomment this code when get_products is implemented
     location_url = url_for("get_products", product_id=product.id, _external=True)
 
     # location_url = "unknown"
 
-    return jsonify(product.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+    return (
+        jsonify(product.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
 
 
 ######################################################################
@@ -189,4 +160,3 @@ def check_content_type(content_type) -> None:
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         f"Content-Type must be {content_type}",
     )
-
