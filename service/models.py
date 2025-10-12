@@ -6,7 +6,7 @@ All of the models are stored in this module
 
 import logging
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 
 logger = logging.getLogger("flask.app")
 
@@ -34,8 +34,15 @@ class Products(db.Model):
     image_url = db.Column(db.String(1023))
     category = db.Column(db.String(63))
     availability = db.Column(db.Boolean, default=True, nullable=False)
-    created_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_date = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     def __repr__(self):
         return f"<Products {self.name} id=[{self.id}]>"
@@ -79,16 +86,19 @@ class Products(db.Model):
 
     def serialize(self):
         """Serializes a Products into a dictionary"""
-        return {"id": self.id, 
-                "name": self.name,
-                "price": str(self.price), # Convert Decimal to string for JSON serialization since Json does not support Decimal
-                "description": self.description,
-                "image_url": self.image_url,
-                "category": self.category,
-                "availability": self.availability,
-                "created_date": self.created_date,
-                "updated_date": self.updated_date
-                }
+        return {
+            "id": self.id,
+            "name": self.name,
+            "price": str(
+                self.price
+            ),  # Convert Decimal to string for JSON serialization since Json does not support Decimal
+            "description": self.description,
+            "image_url": self.image_url,
+            "category": self.category,
+            "availability": self.availability,
+            "created_date": self.created_date,
+            "updated_date": self.updated_date,
+        }
 
     def deserialize(self, data):
         """
@@ -144,3 +154,33 @@ class Products(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @classmethod
+    def find_by_category(cls, category: str) -> list:
+        """Returns all of the products in a category
+
+        :param category: the category of the products you want to match
+        :type category: str
+
+        :return: a collection of products in that category
+        :rtype: list
+
+        """
+        logger.info("Processing category query for %s ...", category)
+        return cls.query.filter(cls.category == category)
+
+    @classmethod
+    def find_by_availability(cls, available: bool = True) -> list:
+        """Returns all products by their availability
+
+        :param available: True for products that are available
+        :type available: str
+
+        :return: a collection of products that are available
+        :rtype: list
+
+        """
+        if not isinstance(available, bool):
+            raise TypeError("Invalid availability, must be of type boolean")
+        logger.info("Processing available query for %s ...", available)
+        return cls.query.filter(cls.availability == available)
