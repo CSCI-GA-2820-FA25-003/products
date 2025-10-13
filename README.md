@@ -1,17 +1,32 @@
-# Product Services 🛍️ NYU DevOps Project
+# NYU DevOps Project Template
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-The Products Service is a RESTful microservice that manages product data, providing CRUD (Create, Read, Update, Delete) operations for an online store. It is built with Flask and follows the structure and standards used in the NYU DevOps course.
+This is a skeleton you can use to start your projects.
+
+**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
 
 ## Overview
 
-This service provides an API to interact with a catalog of products.
-Developers and applications can use the /products endpoint to retrieve, create, update, or delete product records.
+This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
 
-The project follows a standard DevOps-ready structure with separate folders for the service logic and test suites.
+## Automatic Setup
 
+The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+
+## Manual Setup
+
+You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
+
+There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
+
+These should be copied using a bash shell as follows:
+
+```bash
+    cp .gitignore  ../<your_repo_folder>/
+    cp .flaskenv ../<your_repo_folder>/
+    cp .gitattributes ../<your_repo_folder>/
 ```
 
 ## Contents
@@ -44,49 +59,6 @@ tests/                     - test cases package
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
 ```
-
-## Installation
-
-### Prerequisites
-- **Python 3.10+**
-- **[Poetry](https://python-poetry.org/)** (for dependency management)
-- **Git**
-
-### Setup Steps
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/<your-org>/<your-repo>.git
-   cd <your-repo>
-2. **Set up the enviorment**
-    ```bash 
-    cp dot-env-example .env
-3. **Install dependencies using Poetry**
-    ```bash
-    poetry install
-4. **Activate the virtual environment**
-    ```bash
-    poetry shell
-5. **Initialize the database (first-time setup)**
-    ```bash
-    flask db-create
-6. **Run the service**
-   ```bash
-   flask run
-By default, the service will be available at http://localhost:8080
-7. **Test the service**
-    ```bash
-    curl http://localhost:8080/products
-
-### Testing
-1. **Run all tests**
-   ```bash
-   pytest
-
-2. **Run with coverage**
-   ```bash
-   pytest --cov=service
-   
 
 ## License
 
