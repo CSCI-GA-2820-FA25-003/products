@@ -232,4 +232,4 @@ def delete_product(product_id):
         app.logger.warning("Product with id [%s] not found. Nothing to delete.", product_id)
 
     # According to REST convention, DELETE is idempotent — returning 204 regardless
-    return "", status.HTTP_204_NO_CONTENT
+    return jsonify(message=f"Product {product_id} deleted."), status.HTTP_204_NO_CONTENT
