@@ -210,3 +210,26 @@ def update_product(product_id):
 
     app.logger.info("Product with ID [%s] updated.", product.id)
     return jsonify(product.serialize()), status.HTTP_200_OK
+
+######################################################################
+# DELETE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>", methods=["DELETE"])
+def delete_product(product_id):
+    """
+    Delete a Product
+
+    This endpoint will delete a Product based on its id.
+    Returns HTTP_204_NO_CONTENT on success even if the product does not exist.
+    """
+    app.logger.info("Request to delete product with id: %s", product_id)
+
+    product = Products.find(product_id)
+    if product:
+        product.delete()
+        app.logger.info("Product with id [%s] deleted.", product_id)
+    else:
+        app.logger.warning("Product with id [%s] not found. Nothing to delete.", product_id)
+
+    # According to REST convention, DELETE is idempotent — returning 204 regardless
+    return jsonify(message=f"Product {product_id} deleted."), status.HTTP_204_NO_CONTENT
