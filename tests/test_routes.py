@@ -424,3 +424,39 @@ class TestYourResourceService(TestCase):
         # check the data just to be sure
         for product in data:
             self.assertEqual(product["availability"], False)
+
+    
+    # ----------------------------------------------------------
+    # TEST DELETE
+    # ----------------------------------------------------------
+
+    def test_delete_existing_product(self):
+        """Should delete an existing product and return 204"""
+        # Create a product using factory
+        test_product = self._create_products(1)[0]
+        product_id = test_product.id
+
+        # Verify it exists
+        resp = self.client.get(f"{BASE_URL}/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Delete the product
+        resp = self.client.delete(f"{BASE_URL}/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Confirm it is gone
+        resp = self.client.get(f"{BASE_URL}/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_delete_nonexistent_product(self):
+        """Should return 204 even if product does not exist (idempotent behavior)"""
+        # 99999 is an arbitrary non-existent id
+        resp = self.client.delete(f"{BASE_URL}/99999")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+
+    def test_delete_invalid_id_format(self):
+        """Should return 400 Bad Request when product ID format is invalid"""
+        resp = self.client.delete(f"{BASE_URL}/abc")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
