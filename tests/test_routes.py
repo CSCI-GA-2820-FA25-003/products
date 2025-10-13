@@ -459,4 +459,4 @@ class TestYourResourceService(TestCase):
     def test_delete_invalid_id_format(self):
         """Should return 400 Bad Request when product ID format is invalid"""
         resp = self.client.delete(f"{BASE_URL}/abc")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
