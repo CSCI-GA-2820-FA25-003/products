@@ -22,11 +22,10 @@ TestProducts API Service Test Suite
 import os
 import logging
 from unittest import TestCase
-from unittest.mock import patch
 from tests.factories import ProductsFactory
 from wsgi import app
 from service.common import status
-from service.models import db, Products, DataValidationError
+from service.models import db, Products
 from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
@@ -264,7 +263,6 @@ class TestYourResourceService(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-
     # ----------------------------------------------------------
     # TEST QUERY
     # ----------------------------------------------------------
@@ -334,11 +332,9 @@ class TestYourResourceService(TestCase):
         for product in data:
             self.assertEqual(product["availability"], False)
 
-    
     # ----------------------------------------------------------
     # TEST DELETE
     # ----------------------------------------------------------
-
     def test_delete_existing_product(self):
         """Should delete an existing product and return 204"""
         # Create a product using factory
@@ -357,13 +353,11 @@ class TestYourResourceService(TestCase):
         resp = self.client.get(f"{BASE_URL}/{product_id}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_delete_nonexistent_product(self):
         """Should return 204 even if product does not exist (idempotent behavior)"""
         # 99999 is an arbitrary non-existent id
         resp = self.client.delete(f"{BASE_URL}/99999")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-
 
     def test_delete_invalid_id_format(self):
         """Should return 404 not found when product ID format is invalid"""
