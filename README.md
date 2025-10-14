@@ -12,13 +12,9 @@ Developers and applications can use the /products endpoint to retrieve, create, 
 
 The project follows a standard DevOps-ready structure with separate folders for the service logic and test suites.
 
-```
-
 ## Contents
-
 The project contains the following:
-
-```text
+```
 .gitignore          - this will ignore vagrant and other metadata files
 .flaskenv           - Environment variables to configure Flask
 .gitattributes      - File to gix Windows CRLF issues
@@ -43,6 +39,7 @@ tests/                     - test cases package
 ├── test_cli_commands.py   - test suite for the CLI
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
+
 ```
 
 ## Installation
