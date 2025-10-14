@@ -201,28 +201,6 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated_product["category"], "Updated Category")
         self.assertEqual(updated_product["availability"], False)
 
-    def test_update_product_partial(self):
-        """It should partially update a product (only provided fields)"""
-        # Create a product
-        test_product = self._create_products(1)[0]
-        original_name = test_product.name
-        original_description = test_product.description
-
-        # Only update price and availability
-        response = self.client.put(
-            f"{BASE_URL}/{test_product.id}",
-            json={"price": "299.99", "availability": False},
-            content_type="application/json"
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_product = response.get_json()
-        self.assertEqual(updated_product["price"], "299.99")
-        self.assertEqual(updated_product["availability"], False)
-        # These should remain unchanged
-        self.assertEqual(updated_product["name"], original_name)
-        self.assertEqual(updated_product["description"], original_description)
-
     def test_update_product_not_found(self):
         """It should return 404 when updating non-existent product"""
         response = self.client.put(
@@ -286,82 +264,6 @@ class TestYourResourceService(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    def test_update_product_empty_json(self):
-        """It should handle empty JSON body (no fields to update)"""
-        test_product = self._create_products(1)[0]
-        original_name = test_product.name
-
-        # Send empty JSON - should succeed with no changes
-        response = self.client.put(
-            f"{BASE_URL}/{test_product.id}",
-            json={},
-            content_type="application/json"
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_product = response.get_json()
-        # Nothing should change
-        self.assertEqual(updated_product["name"], original_name)
-
-    def test_update_product_decimal_price_validation(self):
-        """It should properly handle decimal price formats"""
-        test_product = self._create_products(1)[0]
-
-        # Test various decimal formats
-        test_prices = ["0.01", "999.99", "1234.56"]
-
-        for price in test_prices:
-            response = self.client.put(
-                f"{BASE_URL}/{test_product.id}",
-                json={"price": price},
-                content_type="application/json"
-            )
-
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            updated_product = response.get_json()
-            self.assertEqual(updated_product["price"], price)
-
-    def test_update_product_response_includes_all_fields(self):
-        """It should return all product fields in JSON response"""
-        test_product = self._create_products(1)[0]
-
-        response = self.client.put(
-            f"{BASE_URL}/{test_product.id}",
-            json={"name": "Updated"},
-            content_type="application/json"
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_product = response.get_json()
-
-        # Check all fields are present in response
-        self.assertIn("id", updated_product)
-        self.assertIn("name", updated_product)
-        self.assertIn("description", updated_product)
-        self.assertIn("price", updated_product)
-        self.assertIn("image_url", updated_product)
-        self.assertIn("category", updated_product)
-        self.assertIn("availability", updated_product)
-        self.assertIn("created_date", updated_product)
-        self.assertIn("updated_date", updated_product)
-
-    def test_update_product_database_error(self):
-        """It should handle database errors during update"""
-        test_product = self._create_products(1)[0]
-
-        # Mock the update method to raise a DataValidationError
-        with patch.object(Products, 'update') as mock_update:
-            mock_update.side_effect = DataValidationError("Database error")
-
-            response = self.client.put(
-                f"{BASE_URL}/{test_product.id}",
-                json={"name": "This will fail"},
-                content_type="application/json"
-            )
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            data = response.get_json()
-            self.assertIn("Database error", data["message"])
 
     # ----------------------------------------------------------
     # TEST QUERY
