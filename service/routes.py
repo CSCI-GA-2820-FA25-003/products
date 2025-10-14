@@ -170,6 +170,7 @@ def check_content_type(content_type) -> None:
         f"Content-Type must be {content_type}",
     )
 
+
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
@@ -181,44 +182,24 @@ def update_product(product_id):
     This endpoint will update a Product based on the body that is posted
     """
     app.logger.info("Request to update product with id: %s", product_id)
-
-    # Check content type
     check_content_type("application/json")
 
-    # Find the product
+    # Attempt to find the Product and abort if not found
     product = Products.find(product_id)
     if not product:
         abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
 
-    # Get the JSON data
+    # Update the Product with the new data
     data = request.get_json()
-    app.logger.debug("Payload = %s", data)
+    app.logger.info("Processing: %s", data)
+    product.deserialize(data)
 
-    # Support partial updates - only update provided fields
-    try:
-        if "name" in data:
-            product.name = data["name"]
-        if "description" in data:
-            product.description = data["description"]
-        if "price" in data:
-            product.price = data["price"]
-        if "image_url" in data:
-            product.image_url = data["image_url"]
-        if "category" in data:
-            product.category = data["category"]
-        if "availability" in data:
-            product.availability = data["availability"]
+    # Save the updates to the database
+    product.update()
 
-        # Save the updates
-        product.update()
-
-    except (KeyError, TypeError, ValueError) as error:
-        abort(status.HTTP_400_BAD_REQUEST, str(error))
-    except DataValidationError as error:
-        abort(status.HTTP_400_BAD_REQUEST, str(error))
-
-    app.logger.info("Product with ID [%s] updated.", product.id)
+    app.logger.info("Product with ID: %d updated.", product.id)
     return jsonify(product.serialize()), status.HTTP_200_OK
+
 
 ######################################################################
 # DELETE A PRODUCT
