@@ -83,7 +83,6 @@ By default, the service will be available at http://localhost:8080
 2. **Run with coverage**
    ```bash
    pytest --cov=service
-   
 
 ## License
 
