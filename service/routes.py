@@ -33,19 +33,24 @@ from service.common import status  # HTTP Status Codes
 @app.route("/")
 def index():
     """Root URL response"""
-    return jsonify({
-        "name": "Products REST API Service",
-        "version": "1.0.0",
-        "description": "Provides RESTful API for managing product inventory",
-        "endpoints": {
-            "list_products": "/products",
-            "create_product": "/products (POST)",
-            "get_product": "/products/<product_id>",
-            "update_product": "/products/<product_id> (PUT)",
-            "delete_product": "/products/<product_id> (DELETE)"
-        },
-        "status": "healthy"
-    }), status.HTTP_200_OK
+    return (
+        jsonify(
+            {
+                "name": "Products REST API Service",
+                "version": "1.0.0",
+                "description": "Provides RESTful API for managing product inventory",
+                "endpoints": {
+                    "list_products": "/products",
+                    "create_product": "/products (POST)",
+                    "get_product": "/products/<product_id>",
+                    "update_product": "/products/<product_id> (PUT)",
+                    "delete_product": "/products/<product_id> (DELETE)",
+                },
+                "status": "healthy",
+            }
+        ),
+        status.HTTP_200_OK,
+    )
 
 
 ######################################################################
@@ -67,6 +72,8 @@ def list_products():
     category = request.args.get("category")
     name = request.args.get("name")
     availability = request.args.get("availability")
+    page_param = request.args.get("page")
+    limit_param = request.args.get("limit")
 
     if category:
         app.logger.info("Find by category: %s", category)
@@ -83,8 +90,33 @@ def list_products():
         app.logger.info("Find all")
         products = Products.all()
 
+    products = sorted(products, key=lambda p: (p.name or "").lower())
+    if page_param is not None and limit_param is not None:
+        try:
+            page = int(page_param)
+            limit = int(limit_param)
+        except (TypeError, ValueError):
+            page = 1
+            limit = 100
+
+        if page < 1:
+            page = 1
+        if limit < 1:
+            limit = 100
+
+        start = (page - 1) * limit
+        end = start + limit
+        products = products[start:end]
+        app.logger.info(
+            "Paginated results: page=%d, limit=%d, returning %d products",
+            page,
+            limit,
+            len(products),
+        )
+    else:
+        app.logger.info("No pagination parameters provided, returning all products")
+
     results = [product.serialize() for product in products]
-    app.logger.info("Returning %d products", len(results))
     return jsonify(results), status.HTTP_200_OK
 
 
@@ -185,7 +217,9 @@ def update_product(product_id):
     # Attempt to find the Product and abort if not found
     product = Products.find(product_id)
     if not product:
-        abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found."
+        )
 
     # Update the Product with the new data
     data = request.get_json()
@@ -217,7 +251,9 @@ def delete_product(product_id):
         product.delete()
         app.logger.info("Product with id [%s] deleted.", product_id)
     else:
-        app.logger.warning("Product with id [%s] not found. Nothing to delete.", product_id)
+        app.logger.warning(
+            "Product with id [%s] not found. Nothing to delete.", product_id
+        )
 
     # According to REST convention, DELETE is idempotent — returning 204 regardless
     return jsonify(message=f"Product {product_id} deleted."), status.HTTP_204_NO_CONTENT
