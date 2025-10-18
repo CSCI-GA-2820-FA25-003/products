@@ -113,6 +113,67 @@ class TestYourResourceService(TestCase):
         data = response.get_json()
         self.assertEqual(len(data), 5)
 
+    def test_get_product_list_with_pagination(self):
+        """It should Get a paginated list of products and all pages together should include all products"""
+        self._create_products(5)
+        all_names = set()
+
+        page = 1
+        limit = 2
+        total_received = 0
+
+        while True:
+            response = self.client.get(f"{BASE_URL}?page={page}&limit={limit}")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            data = response.get_json()
+            if not data:
+                break
+
+            names = [p["name"] for p in data]
+            self.assertEqual(names, sorted(names, key=lambda n: n.lower()))
+            overlap = all_names.intersection(names)
+            self.assertEqual(len(overlap), 0, f"Pagination overlap detected: {overlap}")
+
+            all_names.update(names)
+            total_received += len(data)
+            page += 1
+
+        self.assertEqual(
+            total_received, 5, f"Expected 5 products total, got {total_received}"
+        )
+        self.assertEqual(
+            len(all_names), 5, "Combined names should be all unique products"
+        )
+
+    def test_get_product_list_with_invalid_pagination(self):
+        """It should handle invalid pagination parameters gracefully"""
+        self._create_products(5)
+
+        response = self.client.get(f"{BASE_URL}?page=abc&limit=0")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertTrue(len(data) >= 1)
+        self.assertIsInstance(data, list)
+
+        names = [p["name"] for p in data]
+        self.assertEqual(names, sorted(names, key=lambda n: n.lower()))
+
+    def test_get_product_list_with_zero_pagination(self):
+        """It should default to page=1 and limit=20 when page=0 and limit=0"""
+        self._create_products(5)
+
+        response = self.client.get(f"{BASE_URL}?page=0&limit=0")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+        self.assertIsInstance(data, list)
+
+        names = [p["name"] for p in data]
+        self.assertEqual(names, sorted(names, key=lambda n: n.lower()))
+
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------
@@ -182,13 +243,13 @@ class TestYourResourceService(TestCase):
             "price": "199.99",
             "image_url": "http://updated.com/image.jpg",
             "category": "Updated Category",
-            "availability": False
+            "availability": False,
         }
 
         response = self.client.put(
             f"{BASE_URL}/{test_product.id}",
             json=update_data,
-            content_type="application/json"
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -205,7 +266,7 @@ class TestYourResourceService(TestCase):
         response = self.client.put(
             f"{BASE_URL}/99999",
             json={"name": "Does Not Matter"},
-            content_type="application/json"
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -220,7 +281,7 @@ class TestYourResourceService(TestCase):
         response = self.client.put(
             f"{BASE_URL}/{test_product.id}",
             json={"price": "not_a_number"},
-            content_type="application/json"
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -233,7 +294,7 @@ class TestYourResourceService(TestCase):
         response = self.client.put(
             f"{BASE_URL}/{test_product.id}",
             json={"availability": "not_a_boolean"},
-            content_type="application/json"
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -243,9 +304,7 @@ class TestYourResourceService(TestCase):
         test_product = self._create_products(1)[0]
 
         response = self.client.put(
-            f"{BASE_URL}/{test_product.id}",
-            data="not json",
-            content_type="text/plain"
+            f"{BASE_URL}/{test_product.id}", data="not json", content_type="text/plain"
         )
 
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -257,8 +316,7 @@ class TestYourResourceService(TestCase):
         test_product = self._create_products(1)[0]
 
         response = self.client.put(
-            f"{BASE_URL}/{test_product.id}",
-            data='{"name": "Test"}'
+            f"{BASE_URL}/{test_product.id}", data='{"name": "Test"}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
