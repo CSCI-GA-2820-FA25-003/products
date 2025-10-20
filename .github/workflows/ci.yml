@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install system dependencies
         run: |
@@ -42,22 +42,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run linting with flake8
+      - name: Run linting by preset Makefile
         run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings
-          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run linting with pylint
+          make lint
+          
+      - name: Run testing by preset Makefile
         run: |
-          pylint service tests --max-line-length=127
-
-      - name: Run unit tests with pytest
-        env:
-          DATABASE_URI: postgresql://postgres:postgres@postgres:5432/testdb
-        run: |
-          pytest --verbose --color=yes --cov=service --cov-report=term-missing --cov-report=xml --cov-fail-under=95
+          make test
 
       - name: Install packages for Codecov to work
         run: apt-get update && apt-get install -y git curl gpg
