@@ -4,66 +4,63 @@ on:
   push:
     branches:
       - master
-      - main
   pull_request:
     branches:
       - master
-      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     container: python:3.11-slim
 
     services:
       postgres:
         image: postgres:15-alpine
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
+          POSTGRES_DB: products_test
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 5432:5432
 
+    # Steps for the build
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Install system dependencies
+            
+      - name: Install OS deps
         run: |
           apt-get update
-          apt-get install -y gcc make libpq-dev
-
-      - name: Install Python dependencies
+          apt-get install -y make git curl gpg build-essential gcc
+          
+      - name: Install pipenv
+        run: python -m pip install -U pip pipenv
+          
+      - name: Install Python deps
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pipenv install --system --dev
 
-      - name: Run linting with flake8
+      - name: Run linting by preset Makefile
         run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings
-          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run linting with pylint
-        run: |
-          pylint service tests --max-line-length=127
-
-      - name: Run unit tests with pytest
+          make lint
+          
+      - name: Run testing by preset Makefile
         env:
-          DATABASE_URI: postgresql://postgres:postgres@postgres:5432/testdb
+          DATABASE_URI: postgresql+psycopg://postgres:postgres@postgres:5432/products_test
+          FLASK_ENV: testing
         run: |
-          pytest --verbose --color=yes --cov=service --cov-report=term-missing --cov-report=xml --cov-fail-under=95
+          make test
 
+      - name: Install packages for Codecov to work
+        run: apt-get update && apt-get install -y git curl gpg
+        
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+          slug: CSCI-GA-2820-FA25-003/products
