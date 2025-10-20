@@ -22,4 +22,4 @@ class ProductsFactory(factory.Factory):
     category = factory.Faker("word")
     availability = factory.Faker("boolean")
 
-    # Todo: Add your other attributes here...
+    # NOTE: Add other attributes here if/when needed for tests.

@@ -190,7 +190,9 @@ class TestProducts(TestCase):
     def test_deserialize_attribute_error_raises(self):
         """It should raise DataValidationError when object lacks .get()"""
 
+        # pylint: disable=too-few-public-methods
         class IndexOnly:
+            """Lightweight helper class that wraps a backing object and provides index access only."""
             def __init__(self, backing):
                 self._b = backing
 

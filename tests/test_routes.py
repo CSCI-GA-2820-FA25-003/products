@@ -22,11 +22,12 @@ TestProducts API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from urllib.parse import quote_plus
+
 from tests.factories import ProductsFactory
 from wsgi import app
 from service.common import status
 from service.models import db, Products
-from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
