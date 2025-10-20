@@ -41,7 +41,7 @@ jobs:
           
       - name: Install Python deps
         run: |
-          make install
+          pipenv install --system --dev
 
       - name: Run linting by preset Makefile
         run: |
