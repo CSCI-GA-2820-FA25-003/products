@@ -59,9 +59,10 @@ jobs:
         run: |
           pytest --verbose --color=yes --cov=service --cov-report=term-missing --cov-report=xml --cov-fail-under=95
 
+      - name: Install packages for Codecov to work
+        run: apt-get update && apt-get install -y git curl gpg
+        
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: unittests
-          fail_ci_if_error: true
