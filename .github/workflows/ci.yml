@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.11-slim
 
-    # Required services    
     services:
       postgres:
         image: postgres:15-alpine
@@ -51,6 +50,9 @@ jobs:
           make lint
           
       - name: Run testing by preset Makefile
+        env:
+          DATABASE_URI: postgresql+psycopg://postgres:postgres@postgres:5432/products_test
+          FLASK_ENV: testing
         run: |
           make test
 
