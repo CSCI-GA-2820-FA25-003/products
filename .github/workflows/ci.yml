@@ -31,10 +31,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
             
-      - name: Install Python package dependencies
+      - name: Install OS packages (make/git/curl/gpg)
         run: |
-          python -m pip install -U pip pipenv
-          pipenv install --system --dev
+          apt-get update
+          apt-get install -y make git curl gpg gcc build-essential
 
       - name: Run linting by preset Makefile
         run: |
