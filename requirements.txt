@@ -18,4 +18,4 @@ python-dotenv==1.0.0
 gunicorn==21.2.0
 honcho==1.1.0
 
-httpretty==1.1.7
+httpretty==1.1.4
