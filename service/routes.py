@@ -99,8 +99,7 @@ def list_products():
             page = 1
             limit = 100
 
-        if page < 1:
-            page = 1
+        page = max(page, 1)
         if limit < 1:
             limit = 100
 
@@ -167,7 +166,7 @@ def create_products():
 
     # Return the location of the new product
 
-    # Todo: uncomment this code when get_products is implemented
+    # NOTE: Uncomment when get_products is implemented (see issue #4)
     location_url = url_for("get_products", product_id=product.id, _external=True)
 
     # location_url = "unknown"

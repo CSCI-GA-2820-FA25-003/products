@@ -4,9 +4,10 @@ Models for Products
 All of the models are stored in this module
 """
 
-import logging
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
+import logging
+
+from flask_sqlalchemy import SQLAlchemy
 
 logger = logging.getLogger("flask.app")
 
@@ -18,6 +19,7 @@ class DataValidationError(Exception):
     """Used for an data validation errors when deserializing"""
 
 
+# pylint: disable=too-many-instance-attributes
 class Products(db.Model):
     """
     Class that represents a Products
