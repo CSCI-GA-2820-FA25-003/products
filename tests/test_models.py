@@ -166,6 +166,74 @@ class TestProducts(TestCase):
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].name, name)
 
+    def test_find_by_name_partial_match(self):
+        """It should find products with partial name match"""
+        # Create products with specific names
+        product1 = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
+        product1.create()
+        product2 = Products(name="iPhone 15 Pro", category="Electronics", price=1199.99, availability=True)
+        product2.create()
+        product3 = Products(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
+        product3.create()
+        
+        # Test partial match
+        found = Products.find_by_name("iPhone").all()
+        self.assertEqual(len(found), 2)  # Should find iPhone 15 and iPhone 15 Pro
+
+    def test_find_by_name_case_insensitive(self):
+        """It should find products with case-insensitive name search"""
+        # Create product with specific name
+        product = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
+        product.create()
+        
+        # Test case sensitivity
+        found_1 = Products.find_by_name("iphone 15").all()
+        found_2 = Products.find_by_name("iphone").all()
+        self.assertEqual(len(found_1), 1)  # Should find iPhone 15
+        self.assertEqual(len(found_2), 1)  # Should find iPhone 15
+
+    def test_find_by_category_case_insensitive(self):
+        """It should find products with case-insensitive category search"""
+        # Create product with specific category
+        product = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
+        product.create()
+        
+        # Test case sensitivity
+        found = Products.find_by_category("electronics").all()
+        self.assertEqual(len(found), 1)  # Should find iPhone 15
+
+    def test_find_by_name_partial_and_case_insensitive(self):
+        """It should find products with partial name match AND case-insensitive search"""
+        # Create products with specific names
+        product1 = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
+        product1.create()
+        product2 = Products(name="iPhone 15 Pro", category="Electronics", price=1199.99, availability=True)
+        product2.create()
+        product3 = Products(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
+        product3.create()
+        
+        # Test partial match with case insensitive
+        found = Products.find_by_name("iphone").all()
+        self.assertEqual(len(found), 2)  # Should find iPhone 15 and iPhone 15 Pro
+        # Verify the results contain the expected products
+        found_names = [product.name for product in found]
+        self.assertIn("iPhone 15", found_names)
+        self.assertIn("iPhone 15 Pro", found_names)
+
+    def test_find_by_category_partial_match(self):
+        """It should find products with partial category match"""
+        # Create products with specific categories
+        product1 = Products(name="MacBook Pro", category="Computers", price=1999.99, availability=True)
+        product1.create()
+        product2 = Products(name="Dell Laptop", category="Computers", price=1299.99, availability=True)
+        product2.create()
+        product3 = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
+        product3.create()
+        
+        # Test partial category match
+        found = Products.find_by_category("comp").all()
+        self.assertEqual(len(found), 2)  # Should find both Computers products
+
     def test_deserialize_missing_key_raises(self):
         """It should raise DataValidationError when key is missing"""
         p = Products()

@@ -155,7 +155,7 @@ class Products(db.Model):
             name (string): the name of the Productss you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.name == name)
+        return cls.query.filter(cls.name.ilike(f"%{name}%"))
 
     @classmethod
     def find_by_category(cls, category: str) -> list:
@@ -169,7 +169,7 @@ class Products(db.Model):
 
         """
         logger.info("Processing category query for %s ...", category)
-        return cls.query.filter(cls.category == category)
+        return cls.query.filter(cls.category.ilike(f"%{category}%"))
 
     @classmethod
     def find_by_availability(cls, available: bool = True) -> list:

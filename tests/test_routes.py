@@ -357,6 +357,53 @@ class TestYourResourceService(TestCase):
         for product in data:
             self.assertEqual(product["category"], test_category)
 
+    def test_query_by_category_case_insensitive(self):
+        """It should Query products by category with case-insensitive search"""
+        # Create specific products with categories for case testing
+        test_products = [
+            ProductsFactory(name="iPhone 15", category="Electronics", price=999.99, availability=True),
+            ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True),
+            ProductsFactory(name="MacBook Pro", category="Computers", price=1999.99, availability=True)
+        ]
+        
+        created_products = []
+        for product in test_products:
+            response = self.client.post(BASE_URL, json=product.serialize())
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            created_products.append(response.get_json())
+        
+        # Search with different case
+        response = self.client.get(BASE_URL, query_string="category=electronics")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 2)  # Should find both Electronics products
+        for product in data:
+            self.assertEqual(product["category"], "Electronics")
+
+    def test_query_by_name_partial_and_case_insensitive(self):
+        """It should Query products by partial name with case-insensitive search"""
+        # Create specific products with names for testing
+        test_products = [
+            ProductsFactory(name="iPhone 15", category="Electronics", price=999.99, availability=True),
+            ProductsFactory(name="iPhone 15 Pro", category="Electronics", price=1199.99, availability=True),
+            ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
+        ]
+        
+        created_products = []
+        for product in test_products:
+            response = self.client.post(BASE_URL, json=product.serialize())
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            created_products.append(response.get_json())
+        
+        # Search with partial match and different case
+        response = self.client.get(BASE_URL, query_string="name=iphone")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 2)  # Should find iPhone 15 and iPhone 15 Pro
+        # Verify all returned products contain "iPhone" in their name
+        for product in data:
+            self.assertIn("iPhone", product["name"])
+
     def test_query_by_availability(self):
         """It should Query products by availability"""
         products = self._create_products(10)
