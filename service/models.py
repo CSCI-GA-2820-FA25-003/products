@@ -36,6 +36,7 @@ class Products(db.Model):
     image_url = db.Column(db.String(1023))
     category = db.Column(db.String(63))
     availability = db.Column(db.Boolean, default=True, nullable=False)
+    favorited = db.Column(db.Boolean, nullable=False, default=False)
     discontinued = db.Column(db.Boolean, default=False, nullable=False)
     created_date = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
@@ -99,6 +100,7 @@ class Products(db.Model):
             "image_url": self.image_url,
             "category": self.category,
             "availability": self.availability,
+            "favorited": self.favorited,
             "discontinued": self.discontinued,
             "created_date": self.created_date,
             "updated_date": self.updated_date,
@@ -119,6 +121,7 @@ class Products(db.Model):
             self.category = data["category"]
             self.availability = data.get("availability", True)
             self.discontinued = data.get("discontinued", False)
+            self.favorited = data.get("favorited", False)
             self.created_date = data.get("created_date", datetime.now(timezone.utc))
             self.updated_date = data.get("updated_date", datetime.now(timezone.utc))
         except AttributeError as error:
@@ -158,7 +161,9 @@ class Products(db.Model):
             name (string): the name of the Productss you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.discontinued.is_(False)).filter(cls.name.ilike(f"%{name}%"))
+        return cls.query.filter(cls.discontinued.is_(False)).filter(
+            cls.name.ilike(f"%{name}%")
+        )
 
     @classmethod
     def find_by_category(cls, category: str) -> list:
@@ -172,7 +177,9 @@ class Products(db.Model):
 
         """
         logger.info("Processing category query for %s ...", category)
-        return cls.query.filter(cls.discontinued.is_(False)).filter(cls.category.ilike(f"%{category}%"))
+        return cls.query.filter(cls.discontinued.is_(False)).filter(
+            cls.category.ilike(f"%{category}%")
+        )
 
     @classmethod
     def find_by_availability(cls, available: bool = True) -> list:
@@ -188,4 +195,6 @@ class Products(db.Model):
         if not isinstance(available, bool):
             raise TypeError("Invalid availability, must be of type boolean")
         logger.info("Processing available query for %s ...", available)
-        return cls.query.filter(cls.discontinued.is_(False)).filter(cls.availability == available)
+        return cls.query.filter(cls.discontinued.is_(False)).filter(
+            cls.availability == available
+        )

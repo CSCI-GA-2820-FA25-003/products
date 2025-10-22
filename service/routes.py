@@ -295,20 +295,24 @@ def discontinue_product(product_id):
 ######################################################################
 # FAVORITE / UNFAVORITE A PRODUCT
 ######################################################################
+
+
 @app.route("/products/<int:product_id>/favorite", methods=["PUT"])
 def favorite_product(product_id):
     """Favorite a product (idempotent)"""
     app.logger.info("Request to favorite product with id: %s", product_id)
 
     product = Products.find(product_id)
-    if not product:
+    if not product or product.discontinued:
         abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Product with id '{product_id}' was not found.",
+            status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found."
         )
 
-    # Contract for tests: respond 200 + {"favorited": true}
-    return jsonify({"favorited": True, "id": product.id}), status.HTTP_200_OK
+    if not getattr(product, "favorited", False):
+        product.favorited = True
+        product.update()
+
+    return jsonify({"id": product.id, "favorited": True}), status.HTTP_200_OK
 
 
 @app.route("/products/<int:product_id>/unfavorite", methods=["PUT"])
@@ -317,10 +321,13 @@ def unfavorite_product(product_id):
     app.logger.info("Request to unfavorite product with id: %s", product_id)
 
     product = Products.find(product_id)
-    if not product:
+    if not product or product.discontinued:
         abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Product with id '{product_id}' was not found.",
+            status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found."
         )
 
-    return jsonify({"favorited": False, "id": product.id}), status.HTTP_200_OK
+    if getattr(product, "favorited", False):
+        product.favorited = False
+        product.update()
+
+    return jsonify({"id": product.id, "favorited": False}), status.HTTP_200_OK

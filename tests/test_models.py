@@ -84,6 +84,7 @@ class TestProducts(TestCase):
         self.assertEqual(data.category, product.category)
         self.assertEqual(data.availability, product.availability)
         self.assertEqual(data.discontinued, product.discontinued)
+        self.assertEqual(data.favorited, product.favorited)
 
     def test_delete_product(self):
         """It should delete a Products"""
@@ -119,6 +120,7 @@ class TestProducts(TestCase):
         self.assertEqual(same_product.category, "New Category")
         self.assertEqual(same_product.availability, False)
         self.assertFalse(same_product.discontinued)
+        self.assertFalse(same_product.favorited)
 
     def test_list_all_products(self):
         """It should List all products in the database"""
@@ -175,6 +177,7 @@ class TestProducts(TestCase):
         self.assertEqual(data["category"], product.category)
         self.assertEqual(data["availability"], product.availability)
         self.assertEqual(data["discontinued"], product.discontinued)
+        self.assertEqual(data["favorited"], product.favorited)
         self.assertIsNotNone(data["created_date"])
         self.assertIsNotNone(data["updated_date"])
 
@@ -191,6 +194,7 @@ class TestProducts(TestCase):
         self.assertEqual(new_product.category, product.category)
         self.assertEqual(new_product.availability, product.availability)
         self.assertEqual(new_product.discontinued, product.discontinued)
+        self.assertEqual(new_product.favorited, product.favorited)
 
     def test_find_by_name_product(self):
         """It should find Products by name"""

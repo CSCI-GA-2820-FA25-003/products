@@ -220,6 +220,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_product["category"], test_product.category)
         self.assertEqual(new_product["availability"], test_product.availability)
         self.assertFalse(new_product["discontinued"])
+        self.assertFalse(new_product["favorited"])
 
         # Check that the location header was correct
         response = self.client.get(location)
@@ -232,6 +233,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_product["category"], test_product.category)
         self.assertEqual(new_product["availability"], test_product.availability)
         self.assertFalse(new_product["discontinued"])
+        self.assertFalse(new_product["favorited"])
 
     # ----------------------------------------------------------
     # TEST UPDATE
