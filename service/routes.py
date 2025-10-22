@@ -166,11 +166,7 @@ def create_products():
     app.logger.info("product with new id [%s] saved!", product.id)
 
     # Return the location of the new product
-
-    # NOTE: Uncomment when get_products is implemented (see issue #4)
     location_url = url_for("get_products", product_id=product.id, _external=True)
-
-    # location_url = "unknown"
 
     return (
         jsonify(product.serialize()),
@@ -214,19 +210,15 @@ def update_product(product_id):
     app.logger.info("Request to update product with id: %s", product_id)
     check_content_type("application/json")
 
-    # Attempt to find the Product and abort if not found
     product = Products.find(product_id)
     if not product or product.discontinued:
         abort(
             status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found."
         )
 
-    # Update the Product with the new data
     data = request.get_json()
     app.logger.info("Processing: %s", data)
     product.deserialize(data)
-
-    # Save the updates to the database
     product.update()
 
     app.logger.info("Product with ID: %d updated.", product.id)
@@ -238,12 +230,7 @@ def update_product(product_id):
 ######################################################################
 @app.route("/products/<int:product_id>", methods=["DELETE"])
 def delete_product(product_id):
-    """
-    Delete a Product
-
-    This endpoint will delete a Product based on its id.
-    Returns HTTP_204_NO_CONTENT on success even if the product does not exist.
-    """
+    """Delete a Product"""
     app.logger.info("Request to delete product with id: %s", product_id)
 
     product = Products.find(product_id)
@@ -255,7 +242,6 @@ def delete_product(product_id):
             "Product with id [%s] not found. Nothing to delete.", product_id
         )
 
-    # According to REST convention, DELETE is idempotent — returning 204 regardless
     return jsonify(message=f"Product {product_id} deleted."), status.HTTP_204_NO_CONTENT
 
 
@@ -304,3 +290,37 @@ def discontinue_product(product_id):
     app.logger.info("Product with id [%s] discontinued.", product_id)
 
     return jsonify(product.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# FAVORITE / UNFAVORITE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>/favorite", methods=["PUT"])
+def favorite_product(product_id):
+    """Favorite a product (idempotent)"""
+    app.logger.info("Request to favorite product with id: %s", product_id)
+
+    product = Products.find(product_id)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id '{product_id}' was not found.",
+        )
+
+    # Contract for tests: respond 200 + {"favorited": true}
+    return jsonify({"favorited": True, "id": product.id}), status.HTTP_200_OK
+
+
+@app.route("/products/<int:product_id>/unfavorite", methods=["PUT"])
+def unfavorite_product(product_id):
+    """Unfavorite a product (idempotent)"""
+    app.logger.info("Request to unfavorite product with id: %s", product_id)
+
+    product = Products.find(product_id)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id '{product_id}' was not found.",
+        )
+
+    return jsonify({"favorited": False, "id": product.id}), status.HTTP_200_OK

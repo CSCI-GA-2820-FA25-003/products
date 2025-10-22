@@ -349,6 +349,105 @@ class TestYourResourceService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # ----------------------------------------------------------
+    # TEST FAVORITE / UNFAVORITE
+    # ----------------------------------------------------------
+    def test_favorite_product_success(self):
+        """It should favorite a product successfully"""
+        product = self._create_products(1)[0]
+
+        resp = self.client.put(f"{BASE_URL}/{product.id}/favorite")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertIn("favorited", data)
+        self.assertTrue(data["favorited"])
+
+    def test_unfavorite_product_success(self):
+        """It should unfavorite a product successfully"""
+        product = self._create_products(1)[0]
+
+        # First favorite it
+        r1 = self.client.put(f"{BASE_URL}/{product.id}/favorite")
+        self.assertEqual(r1.status_code, status.HTTP_200_OK)
+
+        # Then unfavorite it
+        r2 = self.client.put(f"{BASE_URL}/{product.id}/unfavorite")
+        self.assertEqual(r2.status_code, status.HTTP_200_OK)
+        data = r2.get_json()
+        self.assertIn("favorited", data)
+        self.assertFalse(data["favorited"])
+
+    def test_favorite_product_not_found(self):
+        """It should return 404 when trying to favorite a product that does not exist"""
+        resp = self.client.put(f"{BASE_URL}/999999/favorite")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_idempotent_favorite(self):
+        """Favoriting an already favorited product should be idempotent"""
+        product = self._create_products(1)[0]
+
+        # First favorite
+        r1 = self.client.put(f"{BASE_URL}/{product.id}/favorite")
+        self.assertEqual(r1.status_code, status.HTTP_200_OK)
+        d1 = r1.get_json()
+
+        # Second favorite (should not double count)
+        r2 = self.client.put(f"{BASE_URL}/{product.id}/favorite")
+        self.assertEqual(r2.status_code, status.HTTP_200_OK)
+        d2 = r2.get_json()
+
+        self.assertTrue(d1.get("favorited", False))
+        self.assertTrue(d2.get("favorited", False))
+
+        # If your API returns favorites_count, ensure it didn't increment twice
+        if "favorites_count" in d1 or "favorites_count" in d2:
+            self.assertEqual(d1.get("favorites_count"), d2.get("favorites_count"))
+
+    def test_favorites_count_optional(self):
+        """If implemented, favorites_count should increase with unique users"""
+        product = self._create_products(1)[0]
+
+        # Use simple headers if your service supports per-user favorites
+        h1 = {"X-User-Id": "user-1"}
+        h2 = {"X-User-Id": "user-2"}
+
+        r1 = self.client.put(f"{BASE_URL}/{product.id}/favorite", headers=h1)
+        self.assertEqual(r1.status_code, status.HTTP_200_OK)
+
+        r2 = self.client.put(f"{BASE_URL}/{product.id}/favorite", headers=h2)
+        self.assertEqual(r2.status_code, status.HTTP_200_OK)
+
+        # Read back the product
+        rget = self.client.get(f"{BASE_URL}/{product.id}")
+        self.assertEqual(rget.status_code, status.HTTP_200_OK)
+        pdata = rget.get_json()
+
+        # Only assert if present (story marks this as optional)
+        if "favorites_count" in pdata:
+            self.assertGreaterEqual(pdata["favorites_count"], 2)
+
+    # ----------------------------------------------------------
+    # TEST METHOD NOT ALLOWED (405) COVERAGE
+    # ----------------------------------------------------------
+    def test_method_not_allowed_on_collection_put(self):
+        """It should return 405 when PUT /products (collection PUT not allowed)"""
+        resp = self.client.put(BASE_URL, json={})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        data = resp.get_json()
+        self.assertIsInstance(data, dict)
+        self.assertIn("status", data)
+        self.assertIn("error", data)
+
+    def test_method_not_allowed_on_item_post(self):
+        """It should return 405 when POST /products/<id> (item POST not allowed)"""
+        product = self._create_products(1)[0]
+        resp = self.client.post(f"{BASE_URL}/{product.id}", json={})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        data = resp.get_json()
+        self.assertIsInstance(data, dict)
+        self.assertIn("status", data)
+        self.assertIn("error", data)
+
+    # ----------------------------------------------------------
     # TEST QUERY
     # ----------------------------------------------------------
     def test_query_by_name(self):
@@ -387,9 +486,24 @@ class TestYourResourceService(TestCase):
         """It should Query products by category with case-insensitive search"""
         # Create specific products with categories for case testing
         test_products = [
-            ProductsFactory(name="iPhone 15", category="Electronics", price=999.99, availability=True),
-            ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True),
-            ProductsFactory(name="MacBook Pro", category="Computers", price=1999.99, availability=True)
+            ProductsFactory(
+                name="iPhone 15",
+                category="Electronics",
+                price=999.99,
+                availability=True,
+            ),
+            ProductsFactory(
+                name="Samsung Galaxy",
+                category="Electronics",
+                price=899.99,
+                availability=True,
+            ),
+            ProductsFactory(
+                name="MacBook Pro",
+                category="Computers",
+                price=1999.99,
+                availability=True,
+            ),
         ]
 
         created_products = []
@@ -410,9 +524,24 @@ class TestYourResourceService(TestCase):
         """It should Query products by partial name with case-insensitive search"""
         # Create specific products with names for testing
         test_products = [
-            ProductsFactory(name="iPhone 15", category="Electronics", price=999.99, availability=True),
-            ProductsFactory(name="iPhone 15 Pro", category="Electronics", price=1199.99, availability=True),
-            ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
+            ProductsFactory(
+                name="iPhone 15",
+                category="Electronics",
+                price=999.99,
+                availability=True,
+            ),
+            ProductsFactory(
+                name="iPhone 15 Pro",
+                category="Electronics",
+                price=1199.99,
+                availability=True,
+            ),
+            ProductsFactory(
+                name="Samsung Galaxy",
+                category="Electronics",
+                price=899.99,
+                availability=True,
+            ),
         ]
 
         created_products = []
