@@ -45,6 +45,7 @@ def index():
                     "get_product": "/products/<product_id>",
                     "update_product": "/products/<product_id> (PUT)",
                     "delete_product": "/products/<product_id> (DELETE)",
+                    "discontinue_product": "/products/<product_id>/discontinue (POST)",
                 },
                 "status": "healthy",
             }
@@ -133,7 +134,7 @@ def get_products(product_id):
 
     # Attempt to find the product and abort if not found
     product = Products.find(product_id)
-    if not product:
+    if not product or product.discontinued:
         abort(
             status.HTTP_404_NOT_FOUND, f"product with id '{product_id}' was not found."
         )
@@ -215,7 +216,7 @@ def update_product(product_id):
 
     # Attempt to find the Product and abort if not found
     product = Products.find(product_id)
-    if not product:
+    if not product or product.discontinued:
         abort(
             status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found."
         )
@@ -256,3 +257,50 @@ def delete_product(product_id):
 
     # According to REST convention, DELETE is idempotent — returning 204 regardless
     return jsonify(message=f"Product {product_id} deleted."), status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# DISCONTINUE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>/discontinue", methods=["POST"])
+def discontinue_product(product_id):
+    """Discontinue a product so it is no longer available via the API"""
+    app.logger.info("Request to discontinue product with id: %s", product_id)
+
+    confirm_arg = request.args.get("confirm")
+    confirm_payload = None
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        if isinstance(payload, dict):
+            confirm_payload = payload.get("confirm")
+
+    confirmed = False
+    if confirm_arg is not None:
+        confirmed = str(confirm_arg).lower() in ["true", "yes", "1", "y"]
+    elif confirm_payload is not None:
+        if isinstance(confirm_payload, bool):
+            confirmed = confirm_payload
+        elif isinstance(confirm_payload, str):
+            confirmed = confirm_payload.lower() in ["true", "yes", "1", "y"]
+        elif isinstance(confirm_payload, (int, float)):
+            confirmed = bool(confirm_payload)
+
+    if not confirmed:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Discontinuing requires confirmation. Add confirm=true to proceed.",
+        )
+
+    product = Products.find(product_id)
+    if not product or product.discontinued:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"product with id '{product_id}' was not found.",
+        )
+
+    product.discontinued = True
+    product.availability = False
+    product.update()
+    app.logger.info("Product with id [%s] discontinued.", product_id)
+
+    return jsonify(product.serialize()), status.HTTP_200_OK
