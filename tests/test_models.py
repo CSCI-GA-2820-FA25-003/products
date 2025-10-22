@@ -201,6 +201,63 @@ class TestProducts(TestCase):
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].name, name)
 
+    # ----------------------------------------------------------
+    # EXTRA COVERAGE: error paths & repr in service/models.py
+    # ----------------------------------------------------------
+
+    def test_create_rollback_on_exception(self):
+        """create() should rollback and raise DataValidationError when commit fails"""
+        product = ProductsFactory()
+        # simulate db failure on commit during create()
+        with patch.object(
+            db.session, "commit", side_effect=Exception("create boom")
+        ), patch.object(db.session, "rollback") as mock_rb:
+            with self.assertRaises(DataValidationError) as ctx:
+                product.create()
+            self.assertIn("create boom", str(ctx.exception))
+            mock_rb.assert_called_once()
+
+    def test_update_rollback_on_exception(self):
+        """update() should rollback and raise DataValidationError when commit fails"""
+        product = ProductsFactory()
+        product.create()
+        product.description = "new"
+        with patch.object(
+            db.session, "commit", side_effect=Exception("update boom")
+        ), patch.object(db.session, "rollback") as mock_rb:
+            with self.assertRaises(DataValidationError) as ctx:
+                product.update()
+            self.assertIn("update boom", str(ctx.exception))
+            mock_rb.assert_called_once()
+
+    def test_deserialize_attribute_error_when_mapping_lacks_get(self):
+        """deserialize() should raise DataValidationError on objects without .get (AttributeError path)"""
+
+        class IndexOnly:
+            def __init__(self, d):
+                self._d = d
+
+            def __getitem__(self, k):
+                return self._d[k]
+
+            # deliberately no .get()
+
+        p = Products()
+        with self.assertRaises(DataValidationError):
+            p.deserialize(IndexOnly({"name": "aaa", "price": 1}))
+
+    def test_deserialize_type_error_when_not_mapping(self):
+        """deserialize() should raise DataValidationError when given a non-dict (TypeError path)"""
+        p = Products()
+        with self.assertRaises(DataValidationError):
+            p.deserialize("not-a-dict")
+
+    def test_products_repr(self):
+        """__repr__ should include the class name (and not crash)"""
+        p = Products()
+        r = repr(p)
+        self.assertIn(Products.__name__, r)
+
     # ... [your other existing tests unchanged above] ...
 
     def test_delete_exception_rolls_back_and_raises(self):

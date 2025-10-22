@@ -381,6 +381,11 @@ class TestYourResourceService(TestCase):
         resp = self.client.put(f"{BASE_URL}/999999/favorite")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_unfavorite_product_not_found(self):
+        """It should return 404 when trying to unfavorite a product that does not exist"""
+        resp = self.client.put(f"{BASE_URL}/999999/unfavorite")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_idempotent_favorite(self):
         """Favoriting an already favorited product should be idempotent"""
         product = self._create_products(1)[0]
