@@ -48,6 +48,8 @@ class TestProducts(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
+        db.drop_all()
+        db.create_all()
 
     @classmethod
     def tearDownClass(cls):
@@ -81,6 +83,7 @@ class TestProducts(TestCase):
         self.assertEqual(data.image_url, product.image_url)
         self.assertEqual(data.category, product.category)
         self.assertEqual(data.availability, product.availability)
+        self.assertEqual(data.discontinued, product.discontinued)
 
     def test_delete_product(self):
         """It should delete a Products"""
@@ -115,6 +118,7 @@ class TestProducts(TestCase):
         self.assertEqual(same_product.image_url, "http://newimage.url/image.png")
         self.assertEqual(same_product.category, "New Category")
         self.assertEqual(same_product.availability, False)
+        self.assertFalse(same_product.discontinued)
 
     def test_list_all_products(self):
         """It should List all products in the database"""
@@ -127,6 +131,35 @@ class TestProducts(TestCase):
         # See if we get back 5 products
         products = Products.all()
         self.assertEqual(len(products), 5)
+
+    def test_all_excludes_discontinued(self):
+        """It should not return discontinued products in the default queries"""
+        active_product = ProductsFactory(availability=True, discontinued=False)
+        active_product.create()
+        discontinued_product = ProductsFactory(
+            name=active_product.name,
+            category=active_product.category,
+            availability=False,
+            discontinued=True,
+        )
+        discontinued_product.create()
+
+        products = Products.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, active_product.id)
+
+        by_name = Products.find_by_name(active_product.name).all()
+        self.assertEqual(len(by_name), 1)
+        self.assertEqual(by_name[0].id, active_product.id)
+
+        by_category = Products.find_by_category(active_product.category).all()
+        self.assertEqual(len(by_category), 1)
+        self.assertEqual(by_category[0].id, active_product.id)
+
+        available = Products.find_by_availability(True).all()
+        ids = [item.id for item in available]
+        self.assertIn(active_product.id, ids)
+        self.assertNotIn(discontinued_product.id, ids)
 
     def test_serialize_product(self):
         """It should serialize a Products"""
@@ -141,6 +174,7 @@ class TestProducts(TestCase):
         self.assertEqual(data["image_url"], product.image_url)
         self.assertEqual(data["category"], product.category)
         self.assertEqual(data["availability"], product.availability)
+        self.assertEqual(data["discontinued"], product.discontinued)
         self.assertIsNotNone(data["created_date"])
         self.assertIsNotNone(data["updated_date"])
 
@@ -156,6 +190,7 @@ class TestProducts(TestCase):
         self.assertEqual(new_product.image_url, product.image_url)
         self.assertEqual(new_product.category, product.category)
         self.assertEqual(new_product.availability, product.availability)
+        self.assertEqual(new_product.discontinued, product.discontinued)
 
     def test_find_by_name_product(self):
         """It should find Products by name"""
@@ -175,7 +210,7 @@ class TestProducts(TestCase):
         product2.create()
         product3 = Products(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
         product3.create()
-        
+
         # Test partial match
         found = Products.find_by_name("iPhone").all()
         self.assertEqual(len(found), 2)  # Should find iPhone 15 and iPhone 15 Pro
@@ -185,7 +220,7 @@ class TestProducts(TestCase):
         # Create product with specific name
         product = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
         product.create()
-        
+
         # Test case sensitivity
         found_1 = Products.find_by_name("iphone 15").all()
         found_2 = Products.find_by_name("iphone").all()
@@ -197,7 +232,7 @@ class TestProducts(TestCase):
         # Create product with specific category
         product = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
         product.create()
-        
+
         # Test case sensitivity
         found = Products.find_by_category("electronics").all()
         self.assertEqual(len(found), 1)  # Should find iPhone 15
@@ -211,7 +246,7 @@ class TestProducts(TestCase):
         product2.create()
         product3 = Products(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
         product3.create()
-        
+
         # Test partial match with case insensitive
         found = Products.find_by_name("iphone").all()
         self.assertEqual(len(found), 2)  # Should find iPhone 15 and iPhone 15 Pro
@@ -229,7 +264,7 @@ class TestProducts(TestCase):
         product2.create()
         product3 = Products(name="iPhone 15", category="Electronics", price=999.99, availability=True)
         product3.create()
-        
+
         # Test partial category match
         found = Products.find_by_category("comp").all()
         self.assertEqual(len(found), 2)  # Should find both Computers products

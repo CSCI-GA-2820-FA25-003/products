@@ -21,5 +21,6 @@ class ProductsFactory(factory.Factory):
     image_url = factory.Faker("image_url")
     category = factory.Faker("word")
     availability = factory.Faker("boolean")
+    discontinued = False
 
     # NOTE: Add other attributes here if/when needed for tests.

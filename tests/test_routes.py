@@ -52,6 +52,8 @@ class TestYourResourceService(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
+        db.drop_all()
+        db.create_all()
 
     @classmethod
     def tearDownClass(cls):
@@ -217,6 +219,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_product["image_url"], test_product.image_url)
         self.assertEqual(new_product["category"], test_product.category)
         self.assertEqual(new_product["availability"], test_product.availability)
+        self.assertFalse(new_product["discontinued"])
 
         # Check that the location header was correct
         response = self.client.get(location)
@@ -228,6 +231,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_product["image_url"], test_product.image_url)
         self.assertEqual(new_product["category"], test_product.category)
         self.assertEqual(new_product["availability"], test_product.availability)
+        self.assertFalse(new_product["discontinued"])
 
     # ----------------------------------------------------------
     # TEST UPDATE
@@ -261,6 +265,28 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated_product["image_url"], "http://updated.com/image.jpg")
         self.assertEqual(updated_product["category"], "Updated Category")
         self.assertEqual(updated_product["availability"], False)
+        self.assertFalse(updated_product["discontinued"])
+
+    def test_update_discontinued_product(self):
+        """It should return 404 when updating a discontinued product"""
+        test_product = self._create_products(1)[0]
+        product_id = test_product.id
+
+        # discontinue the product first
+        resp = self.client.post(
+            f"{BASE_URL}/{product_id}/discontinue", query_string={"confirm": "true"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        response = self.client.put(
+            f"{BASE_URL}/{product_id}",
+            json={"name": "Still Hidden"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
 
     def test_update_product_not_found(self):
         """It should return 404 when updating non-existent product"""
@@ -365,13 +391,13 @@ class TestYourResourceService(TestCase):
             ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True),
             ProductsFactory(name="MacBook Pro", category="Computers", price=1999.99, availability=True)
         ]
-        
+
         created_products = []
         for product in test_products:
             response = self.client.post(BASE_URL, json=product.serialize())
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             created_products.append(response.get_json())
-        
+
         # Search with different case
         response = self.client.get(BASE_URL, query_string="category=electronics")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -388,13 +414,13 @@ class TestYourResourceService(TestCase):
             ProductsFactory(name="iPhone 15 Pro", category="Electronics", price=1199.99, availability=True),
             ProductsFactory(name="Samsung Galaxy", category="Electronics", price=899.99, availability=True)
         ]
-        
+
         created_products = []
         for product in test_products:
             response = self.client.post(BASE_URL, json=product.serialize())
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             created_products.append(response.get_json())
-        
+
         # Search with partial match and different case
         response = self.client.get(BASE_URL, query_string="name=iphone")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -442,7 +468,7 @@ class TestYourResourceService(TestCase):
     # TEST DELETE
     # ----------------------------------------------------------
     def test_delete_existing_product(self):
-        """Should delete an existing product and return 204"""
+        """It should delete an existing product and return 204"""
         # Create a product using factory
         test_product = self._create_products(1)[0]
         product_id = test_product.id
@@ -460,12 +486,89 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_nonexistent_product(self):
-        """Should return 204 even if product does not exist (idempotent behavior)"""
+        """It should return 204 even if product does not exist"""
         # 99999 is an arbitrary non-existent id
         resp = self.client.delete(f"{BASE_URL}/99999")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_invalid_id_format(self):
-        """Should return 404 not found when product ID format is invalid"""
+        """It should return 404 not found when product ID format is invalid"""
         resp = self.client.delete(f"{BASE_URL}/abc")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_discontinue_requires_confirmation(self):
+        """It should reject discontinue without confirmation"""
+        test_product = self._create_products(1)[0]
+        product_id = test_product.id
+
+        resp = self.client.post(f"{BASE_URL}/{product_id}/discontinue")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        data = resp.get_json()
+        self.assertIn("requires confirmation", data["message"])
+
+    def test_discontinue_product(self):
+        """It should discontinue a product and hide it from APIs"""
+        test_product = self._create_products(1)[0]
+        product_id = test_product.id
+
+        resp = self.client.post(
+            f"{BASE_URL}/{product_id}/discontinue", query_string={"confirm": "true"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertTrue(data["discontinued"])
+        self.assertFalse(data["availability"])
+
+        resp = self.client.get(f"{BASE_URL}/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        resp = self.client.get(BASE_URL)
+        all_products = resp.get_json()
+        self.assertTrue(all(product["id"] != product_id for product in all_products))
+
+        resp = self.client.get(
+            BASE_URL, query_string=f"name={quote_plus(test_product.name)}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 0)
+
+    def test_discontinue_nonexistent_product(self):
+        """It should return 404 when discontinuing a missing product"""
+        resp = self.client.post(
+            f"{BASE_URL}/99999/discontinue", query_string={"confirm": "true"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_discontinue_accepts_json_confirmation(self):
+        """It should accept multiple confirmation payload formats"""
+        products = self._create_products(3)
+
+        payloads = [
+            {"confirm": True},
+            {"confirm": "YES"},
+            {"confirm": 1},
+        ]
+
+        for product, payload in zip(products, payloads):
+            resp = self.client.post(
+                f"{BASE_URL}/{product.id}/discontinue",
+                json=payload,
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            self.assertTrue(resp.get_json()["discontinued"])
+
+    def test_discontinue_already_discontinued(self):
+        """It should return 404 when discontinuing an already discontinued product"""
+        test_product = self._create_products(1)[0]
+        product_id = test_product.id
+
+        resp = self.client.post(
+            f"{BASE_URL}/{product_id}/discontinue", query_string={"confirm": "true"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        resp = self.client.post(
+            f"{BASE_URL}/{product_id}/discontinue", query_string={"confirm": "true"}
+        )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
