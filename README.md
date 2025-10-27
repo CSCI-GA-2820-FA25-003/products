@@ -96,8 +96,6 @@ k8s/ - Kubernetes deployment manifests
    pytest --cov=service
 
 ## Kubernetes Deployment
-
-You can deploy both the **Product Service** and **PostgreSQL database** to a Kubernetes cluster.
 ---
 
 1. **Build and Push the Docker Image**
