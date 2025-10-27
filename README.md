@@ -42,7 +42,16 @@ tests/                     - test cases package
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
 
+k8s/ - Kubernetes deployment manifests
+├── deployment.yaml - Product Service Deployment
+├── service.yaml - Product Service (LoadBalancer/ClusterIP)
+├── configmap.yaml - Configuration and environment variables
+└── postgres/ - PostgreSQL database manifests
+    ├── deployment.yaml - PostgreSQL Deployment
+    ├── service.yaml - PostgreSQL Service
+    └── pvc.yaml - Persistent Volume Claim for data storage
 ```
+
 
 ## Installation
 
@@ -50,13 +59,15 @@ tests/                     - test cases package
 - **Python 3.10+**
 - **[Poetry](https://python-poetry.org/)** (for dependency management)
 - **Git**
+- **Docker** (for containerization)
+- **kubectl** and **Minikube** or a Kubernetes cluster (for deployment)
 
 ### Setup Steps
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-org>/<your-repo>.git
-   cd <your-repo>
+   git clone https://github.com/CSCI-GA-2820-FA25-003/products.git
+   cd products
 2. **Set up the enviorment**
     ```bash 
     cp dot-env-example .env
@@ -72,7 +83,6 @@ tests/                     - test cases package
 6. **Run the service**
    ```bash
    flask run
-By default, the service will be available at http://localhost:8080
 7. **Test the service**
     ```bash
     curl http://localhost:8080/products
@@ -81,10 +91,54 @@ By default, the service will be available at http://localhost:8080
 1. **Run all tests**
    ```bash
    pytest
-
 2. **Run with coverage**
    ```bash
    pytest --cov=service
+
+## Kubernetes Deployment
+
+You can deploy both the **Product Service** and **PostgreSQL database** to a Kubernetes cluster.
+---
+
+1. **Build and Push the Docker Image**
+   ```bash
+    docker build -t <your-dockerhub-username>/products-service:latest .
+    docker push <your-dockerhub-username>/products-service:latest
+2. **Deploy the PostgreSQL Database**
+    ```bash
+    kubectl apply -f k8s/postgres/
+3. **Check the status**
+    ```bash
+    kubectl get pods
+    kubectl get pvc
+    kubectl get services
+4. **Deploy the Product Service**
+    ```bash
+    kubectl apply -f k8s/configmap.yaml
+    kubectl apply -f k8s/deployment.yaml
+    kubectl apply -f k8s/service.yaml
+4.1 **Verify everything is running**
+    ```bash
+    kubectl get pods
+    kubectl get services
+4.1 **Optional, however if using Minikube, you can access the service**
+    ```bash
+    minikube service products-service
+5. **Configure Environment Variables**
+    ```bash
+    FLASK_ENV: production
+    PORT: "8080"
+    DATABASE_URI: postgresql://postgres:postgres@postgres:5432/products
+6. **Scaling and Updating the Deployment**
+    ```bash
+    kubectl scale deployment products-deployment --replicas=3
+    kubectl set image deployment/products-deployment products=<your-dockerhub-username>/products-service:latest
+7. **Cleanup (Optional)**
+    ```bash
+    kubectl delete -f k8s/service.yaml
+    kubectl delete -f k8s/deployment.yaml
+    kubectl delete -f k8s/configmap.yaml
+    kubectl delete -f k8s/postgres/
 
 ## License
 
