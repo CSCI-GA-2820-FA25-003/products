@@ -104,35 +104,45 @@ You can deploy both the **Product Service** and **PostgreSQL database** to a Kub
    ```bash
     docker build -t <your-dockerhub-username>/products-service:latest .
     docker push <your-dockerhub-username>/products-service:latest
+   
 2. **Deploy the PostgreSQL Database**
     ```bash
     kubectl apply -f k8s/postgres/
+    
 3. **Check the status**
     ```bash
     kubectl get pods
     kubectl get pvc
     kubectl get services
+    
 4. **Deploy the Product Service**
     ```bash
     kubectl apply -f k8s/configmap.yaml
     kubectl apply -f k8s/deployment.yaml
     kubectl apply -f k8s/service.yaml
+    
 4.1 **Verify everything is running**
     ```bash
+    
     kubectl get pods
     kubectl get services
-4.1 **Optional, however if using Minikube, you can access the service**
+    
+4.2 **Optional, however if using Minikube, you can access the service**
     ```bash
+    
     minikube service products-service
+    
 5. **Configure Environment Variables**
     ```bash
     FLASK_ENV: production
     PORT: "8080"
     DATABASE_URI: postgresql://postgres:postgres@postgres:5432/products
+    
 6. **Scaling and Updating the Deployment**
     ```bash
     kubectl scale deployment products-deployment --replicas=3
     kubectl set image deployment/products-deployment products=<your-dockerhub-username>/products-service:latest
+    
 7. **Cleanup (Optional)**
     ```bash
     kubectl delete -f k8s/service.yaml
