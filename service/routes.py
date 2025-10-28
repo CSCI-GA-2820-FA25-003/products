@@ -53,6 +53,16 @@ def index():
         status.HTTP_200_OK,
     )
 
+######################################################################
+# HEALTH CHECK
+######################################################################
+
+
+@app.route("/health")
+def health():
+    """Health check endpoint for Kubernetes"""
+    app.logger.info("Health check requested")
+    return jsonify({"status": "OK"}), status.HTTP_200_OK
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
