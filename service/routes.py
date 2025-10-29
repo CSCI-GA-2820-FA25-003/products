@@ -40,12 +40,15 @@ def index():
                 "version": "1.0.0",
                 "description": "Provides RESTful API for managing product inventory",
                 "endpoints": {
-                    "list_products": "/products",
+                    "health": "/health (GET)",
+                    "list_products": "/products (GET)",
                     "create_product": "/products (POST)",
-                    "get_product": "/products/<product_id>",
+                    "get_product": "/products/<product_id> (GET)",
                     "update_product": "/products/<product_id> (PUT)",
                     "delete_product": "/products/<product_id> (DELETE)",
                     "discontinue_product": "/products/<product_id>/discontinue (POST)",
+                    "favorite_product": "/products/<product_id>/favorite (PUT)",
+                    "unfavorite_product": "/products/<product_id>/unfavorite (PUT)",
                 },
                 "status": "healthy",
             }
