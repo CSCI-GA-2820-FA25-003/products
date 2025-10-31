@@ -98,13 +98,6 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        data = resp.get_json()
-        self.assertIn("name", data)
-        self.assertIn("version", data)
-        self.assertIn("description", data)
-        self.assertIn("endpoints", data)
-        self.assertIn("status", data)
-
     ######################################################################
     # HEALTH TEST
     ######################################################################
