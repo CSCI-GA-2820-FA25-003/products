@@ -32,29 +32,31 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
-    return (
-        jsonify(
-            {
-                "name": "Products REST API Service",
-                "version": "1.0.0",
-                "description": "Provides RESTful API for managing product inventory",
-                "endpoints": {
-                    "health": "/health (GET)",
-                    "list_products": "/products (GET)",
-                    "create_product": "/products (POST)",
-                    "get_product": "/products/<product_id> (GET)",
-                    "update_product": "/products/<product_id> (PUT)",
-                    "delete_product": "/products/<product_id> (DELETE)",
-                    "discontinue_product": "/products/<product_id>/discontinue (POST)",
-                    "favorite_product": "/products/<product_id>/favorite (PUT)",
-                    "unfavorite_product": "/products/<product_id>/unfavorite (PUT)",
-                },
-                "status": "healthy",
-            }
-        ),
-        status.HTTP_200_OK,
-    )
+    """Base URL for our service"""
+    return app.send_static_file("index.html")
+    # return (
+    #     jsonify(
+    #         {
+    #             "name": "Products REST API Service",
+    #             "version": "1.0.0",
+    #             "description": "Provides RESTful API for managing product inventory",
+    #             "endpoints": {
+    #                 "health": "/health (GET)",
+    #                 "list_products": "/products (GET)",
+    #                 "create_product": "/products (POST)",
+    #                 "get_product": "/products/<product_id> (GET)",
+    #                 "update_product": "/products/<product_id> (PUT)",
+    #                 "delete_product": "/products/<product_id> (DELETE)",
+    #                 "discontinue_product": "/products/<product_id>/discontinue (POST)",
+    #                 "favorite_product": "/products/<product_id>/favorite (PUT)",
+    #                 "unfavorite_product": "/products/<product_id>/unfavorite (PUT)",
+    #             },
+    #             "status": "healthy",
+    #         }
+    #     ),
+    #     status.HTTP_200_OK,
+    # )
+
 
 ######################################################################
 # HEALTH CHECK
@@ -66,6 +68,7 @@ def health():
     """Health check endpoint for Kubernetes"""
     app.logger.info("Health check requested")
     return jsonify({"status": "OK"}), status.HTTP_200_OK
+
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S

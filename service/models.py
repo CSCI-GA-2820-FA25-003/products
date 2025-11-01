@@ -30,11 +30,11 @@ class Products(db.Model):
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63), nullable=False)
-    description = db.Column(db.String(1023))
+    description = db.Column(db.String(1023), nullable=True)
     price = db.Column(db.Numeric(14, 2), nullable=False)
 
-    image_url = db.Column(db.String(1023))
-    category = db.Column(db.String(63))
+    image_url = db.Column(db.String(1023), nullable=True)
+    category = db.Column(db.String(63), nullable=True)
     availability = db.Column(db.Boolean, default=True, nullable=False)
     favorited = db.Column(db.Boolean, nullable=False, default=False)
     discontinued = db.Column(db.Boolean, default=False, nullable=False)
