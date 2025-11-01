@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Product Administration RESTful Service</title>
+    <title>Product Administration REST API Service</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +11,7 @@
   <body>
     <div class="container">
       <div class="page-header">
-          <h1>Product Administration RESTful Service</h1>
+        <h1>Product Administration RESTful Service</h1>
       </div>
 
       <!-- Flash Message -->
@@ -25,6 +25,7 @@
       <div class="col-md-12" id="form_data">
         <h3>Create, Retrieve, Update, and Delete a Product:</h3>
         <div class="well">
+          <!-- Retrieve / Delete -->
           <div class="form-horizontal">
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_id">Product ID:</label>
@@ -38,13 +39,14 @@
             </div>
           </div> <!-- form horizontal -->
 
+          <!-- Create / Update -->
           <div class="form-horizontal">
 
             <!-- NAME -->
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_name">Name:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="product_name" placeholder="Enter name for Product">
+                <input type="text" class="form-control" id="product_name" placeholder="Enter name for Product" required>
               </div>
             </div>
 
@@ -52,7 +54,7 @@
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_price">Price:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="product_price" placeholder="Enter price for Product">
+                <input type="number" step="0.01" class="form-control" id="product_price" placeholder="Enter price for Product" required>
               </div>
             </div>
 
@@ -66,7 +68,7 @@
 
             <!-- image_url -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="product_image_url">Image Url:</label>
+              <label class="control-label col-sm-2" for="product_image_url">Image URL:</label>
               <div class="col-sm-10">
                 <input type="text" class="form-control" id="product_image_url" placeholder="Enter image_url for Product">
               </div>
@@ -80,7 +82,7 @@
               </div>
             </div>
 
-            <!-- availability -->
+            <!-- availability (server uses `availability` boolean) -->
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_availability">Available:</label>
               <div class="col-sm-10">
@@ -91,7 +93,7 @@
                 </select>
               </div>
             </div>
-            
+
             <!-- discontinued -->
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_discontinued">Discontinued:</label>
@@ -118,7 +120,7 @@
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_created_date">Created Time:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="product_created_date">
+                <input type="text" class="form-control" id="product_created_date" readonly>
               </div>
             </div>
 
@@ -126,10 +128,9 @@
             <div class="form-group">
               <label class="control-label col-sm-2" for="product_updated_date">Updated Time:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="product_updated_date">
+                <input type="text" class="form-control" id="product_updated_date" readonly>
               </div>
             </div>
-
 
             <!-- SUBMIT BUTTONS -->
             <div class="form-group">
@@ -152,34 +153,32 @@
       <div class="table-responsive col-md-12" id="search_results">
         <table class="table table-striped">
           <thead>
-          <tr>
-            <th style="width: 5%;">ID</th>
-            <th style="width: 10%;">Name</th>
-            <th style="width: 10%;">Category</th>
-            <th style="width: 10%;">Price</th>
-            <th style="width: 8%;">Available</th>
-            <th style="width: 8%;">Discontinued</th>
-            <th style="width: 8%;">Favorited</th>
-            <th style="width: 15%;">Created Date</th>
-            <th style="width: 15%;">Updated Date</th>
-            <th style="width: 10%;">Image URL</th>
-          </tr>
+            <tr>
+              <th style="width: 5%;">ID</th>
+              <th style="width: 10%;">Name</th>
+              <th style="width: 10%;">Category</th>
+              <th style="width: 10%;">Price</th>
+              <th style="width: 8%;">Available</th>
+              <th style="width: 8%;">Discontinued</th>
+              <th style="width: 8%;">Favorited</th>
+              <th style="width: 15%;">Created Date</th>
+              <th style="width: 15%;">Updated Date</th>
+              <th style="width: 10%;">Image URL</th>
+            </tr>
           </thead>
         </table>
       </div>
 
       <footer>
         <br><br>
-        <p>&copy; NYU DevOps Company 2022</p>
+        <p>&copy; NYU DevOps Company 2025</p>
       </footer>
-
     </div> <!-- container -->
 
-  <script type="text/javascript" src = "static/js/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" src = "static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
 
-  <!-- YOUR REST API -->
-  <script type="text/javascript" src="static/js/rest_api.js"></script>
-
+    <!-- YOUR REST API -->
+    <script type="text/javascript" src="static/js/rest_api.js"></script>
   </body>
 </html>
