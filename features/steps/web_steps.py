@@ -35,24 +35,26 @@ from selenium.webdriver.support import expected_conditions
 # For the products UI, input ids are prefixed with "product_"
 ID_PREFIX = "product_"
 
-def save_screenshot(context: Any, filename: str) -> None:
-    """Takes a snapshot of the web page for debugging and validation
+# Common aliases for feature field names vs. HTML element IDs
+ALIASES = {
+    "SKU": "Image Url",
+    "Available": "Availability",
+}
 
-    Args:
-        context (Any): The session context
-        filename (str): The message that you are looking for
-    """
-    # Remove all non-word characters (everything except numbers and letters)
+def normalize_field_name(name: str) -> str:
+    """Normalize field names and apply alias mapping"""
+    actual = ALIASES.get(name, name)
+    return actual.lower().replace(" ", "_")
+
+def save_screenshot(context: Any, filename: str) -> None:
+    """Takes a snapshot of the web page for debugging and validation"""
     filename = re.sub(r"[^\w\s]", "", filename)
-    # Replace all runs of whitespace with a single dash
     filename = re.sub(r"\s+", "-", filename)
     context.driver.save_screenshot(f"./captures/{filename}.png")
 
 
-@when('I visit the "Home Page"')
-@when('I visit the "home page"')
-def step_impl(context: Any) -> None:
-    """Make a call to the base URL"""
+@when('I visit the "{_page}"')
+def step_impl(context, _page):
     context.driver.get(context.base_url)
     # Uncomment next line to take a screenshot of the web page
     # save_screenshot(context, 'Home Page')
@@ -64,6 +66,13 @@ def step_impl(context: Any, message: str) -> None:
     assert message in context.driver.title
 
 
+@then('I should see "{text_string}"')
+def step_impl(context: Any, text_string: str) -> None:
+    """Check the page body for specific text"""
+    element = context.driver.find_element(By.TAG_NAME, "body")
+    assert text_string in element.text, f'Expected to see "{text_string}" in page body'
+
+
 @then('I should not see "{text_string}"')
 def step_impl(context: Any, text_string: str) -> None:
     element = context.driver.find_element(By.TAG_NAME, "body")
@@ -72,7 +81,7 @@ def step_impl(context: Any, text_string: str) -> None:
 
 @when('I set the "{element_name}" to "{text_string}"')
 def step_impl(context: Any, element_name: str, text_string: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = context.driver.find_element(By.ID, element_id)
     element.clear()
     element.send_keys(text_string)
@@ -80,21 +89,21 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
 
 @when('I select "{text}" in the "{element_name}" dropdown')
 def step_impl(context: Any, text: str, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = Select(context.driver.find_element(By.ID, element_id))
     element.select_by_visible_text(text)
 
 
 @then('I should see "{text}" in the "{element_name}" dropdown')
 def step_impl(context: Any, text: str, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = Select(context.driver.find_element(By.ID, element_id))
     assert element.first_selected_option.text == text
 
 
 @then('the "{element_name}" field should be empty')
 def step_impl(context: Any, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = context.driver.find_element(By.ID, element_id)
     assert element.get_attribute("value") == ""
 
@@ -104,7 +113,7 @@ def step_impl(context: Any, element_name: str) -> None:
 ##################################################################
 @when('I copy the "{element_name}" field')
 def step_impl(context: Any, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )
@@ -114,7 +123,7 @@ def step_impl(context: Any, element_name: str) -> None:
 
 @when('I paste the "{element_name}" field')
 def step_impl(context: Any, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )
@@ -123,11 +132,7 @@ def step_impl(context: Any, element_name: str) -> None:
 
 
 ##################################################################
-# This code works because of the following naming convention:
-# The buttons have an id in the HTML that is the button text
-# in lowercase followed by '-btn' so the Clear button has an id of
-# id='clear-btn'. That allows us to lowercase the name and add '-btn'
-# to get the element id of any button
+# Button logic
 ##################################################################
 @when('I press the "{button}" button')
 def step_impl(context: Any, button: str) -> None:
@@ -153,8 +158,6 @@ def step_impl(context: Any, name: str) -> None:
 
 @then('I should see the message "{message}"')
 def step_impl(context: Any, message: str) -> None:
-    # Uncomment next line to take a screenshot of the web page for debugging
-    # save_screenshot(context, message)
     found = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, "flash_message"), message
@@ -164,14 +167,11 @@ def step_impl(context: Any, message: str) -> None:
 
 
 ##################################################################
-# This code works because of the following naming convention:
-# The id field for text input in the HTML is the element name
-# prefixed by ID_PREFIX so the Name field has an id='product_name'
-# We can then lowercase the name and prefix with product_ to get the id
+# Field value checks
 ##################################################################
 @then('I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context: Any, text_string: str, element_name: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     found = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.text_to_be_present_in_element_value(
             (By.ID, element_id), text_string
@@ -182,9 +182,22 @@ def step_impl(context: Any, text_string: str, element_name: str) -> None:
 
 @when('I change "{element_name}" to "{text_string}"')
 def step_impl(context: Any, element_name: str, text_string: str) -> None:
-    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element_id = ID_PREFIX + normalize_field_name(element_name)
     element = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )
     element.clear()
     element.send_keys(text_string)
+
+
+##################################################################
+# Dropdown reset check
+##################################################################
+@then('the "{element_name}" dropdown should be reset')
+def step_impl(context: Any, element_name: str) -> None:
+    element_id = ID_PREFIX + normalize_field_name(element_name)
+    select = Select(context.driver.find_element(By.ID, element_id))
+    assert select.options[0].is_selected(), (
+        f'Expected "{element_name}" dropdown to be reset (first option selected), '
+        f'but selected="{select.first_selected_option.text.strip()}"'
+    )

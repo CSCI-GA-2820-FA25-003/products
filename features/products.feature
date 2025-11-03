@@ -1,4 +1,4 @@
-Feature: The pet store service back-end
+Feature: The product store service back-end
     As a Product Store Owner
     I need a RESTful catalog service
     So that I can keep track of all my products
