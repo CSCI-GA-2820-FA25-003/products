@@ -1,32 +1,70 @@
-# pylint: disable=function-redefined
-# flake8: noqa
-import os
+######################################################################
+# Copyright 2016, 2024 John J. Rofrano. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+######################################################################
+
+"""
+Product Steps
+
+Steps file for Products.feature
+
+For information on Waiting until elements are present in the HTML see:
+    https://selenium-python.readthedocs.io/waits.html
+"""
 import requests
-from behave import given, when, then
+from compare3 import expect
+from behave import given  # pylint: disable=no-name-in-module
+
+# HTTP Return Codes
+HTTP_200_OK = 200
+HTTP_201_CREATED = 201
+HTTP_204_NO_CONTENT = 204
+
+WAIT_TIMEOUT = 60
 
 
-@given("the server is started")
+def _to_bool(value: str) -> bool:
+    """Convert common truthy strings to boolean"""
+    return str(value).strip() in ["True", "true", "1", "yes", "on"]
+
+
+@given("the following products")
 def step_impl(context):
-    """Check that the server is started"""
-    context.base_url = os.getenv("BASE_URL", "http://localhost:8080")
-    context.resp = requests.get(context.base_url + "/")
-    assert context.resp.status_code == 200
+    """Delete all Products and load new ones"""
 
+    # Get a list of all products
+    rest_endpoint = f"{context.base_url}/products"
+    context.resp = requests.get(rest_endpoint, timeout=WAIT_TIMEOUT)
+    expect(context.resp.status_code).equal_to(HTTP_200_OK)
 
-@when('I visit the "home page"')
-def step_impl(context):
-    """Visit the Home Page"""
-    context.resp = requests.get(context.base_url + "/")
-    assert context.resp.status_code == 200
+    # Delete them one by one
+    for product in context.resp.json():
+        context.resp = requests.delete(
+            f"{rest_endpoint}/{product['id']}", timeout=WAIT_TIMEOUT
+        )
+        expect(context.resp.status_code).equal_to(HTTP_204_NO_CONTENT)
 
-
-@then('I should see "{message}"')
-def step_impl(context, message):
-    """I should see a message"""
-    assert message in str(context.resp.text)
-
-
-@then('I should not see "{message}"')
-def step_impl(context, message):
-    """I should not see a message"""
-    assert message not in str(context.resp.text)
+    # Load the database with new products
+    for row in context.table:
+        payload = {
+            "name": row["name"],
+            "category": row["category"],
+            "description": row.get("description", ""),
+            # Cast price to float if it's present (strip to be safe)
+            "price": float(row["price"].strip()) if "price" in row and row["price"].strip() != "" else 0.0,
+            "sku": row.get("sku", ""),
+            "available": _to_bool(row.get("available", "False")),
+        }
+        context.resp = requests.post(rest_endpoint, json=payload, timeout=WAIT_TIMEOUT)
+        expect(context.resp.status_code).equal_to(HTTP_201_CREATED)
