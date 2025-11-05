@@ -60,12 +60,7 @@ def step_impl(context):
         availability_str = row.get("availability", row.get("available", "False"))
         discontinued_str = row.get("discontinued", "False")
         favorited_str = row.get("favorited", "False")
-
-        price_value = (
-            row["price"].strip()
-            if "price" in row and row["price"] is not None
-            else "0.0"
-        )
+        price_value = row.get("price", "0.0")
 
         payload = {
             "name": row["name"],
