@@ -83,5 +83,5 @@ Scenario: Delete an existing product
     When I press the "Clear" button
     And I set the "Name" to "iPhone 17"
     And I press the "Search" button
-    Then I should not see "iPhone 17" in the results
+    Then I should see the message "No matching products found."
 
