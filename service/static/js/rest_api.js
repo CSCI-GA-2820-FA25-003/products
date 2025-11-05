@@ -217,64 +217,114 @@ $(function () {
     // ****************************************
 
     $("#search-btn").click(function () {
+        // Read search inputs
+        const name = $("#product_name").val();
+        const category = $("#product_category").val();
+        const availabilityVal = $("#product_availability").val();
 
-        let name = $("#product_name").val();
-        let category = $("#product_category").val();
-        let availabilityVal = $("#product_availability").val();
-
-        let queryString = "";
-
-        if (availabilityVal !== "" && availabilityVal !== null) {
-            let availability = availabilityVal === "true";
-            queryString = "availability=" + availability;
-        }
-
-        if (name) {
-            queryString = 'name=' + name
-        }
-        else if (category) {
-            queryString = 'category=' + category
-        }
+        // Determine whether this is a full list request
+        const noFilters =
+            (!name || name.trim() === "") &&
+            (!category || category.trim() === "") &&
+            (availabilityVal === "" || availabilityVal === null);
 
         $("#flash_message").empty();
 
-        let ajax = $.ajax({
+        // fetch all products directly
+        if (noFilters) {
+            $.ajax({
+                type: "GET",
+                url: `/products`,
+                contentType: "application/json",
+                data: ""
+            })
+            .done(function (all) {
+                renderResultsTable(all, { banner: "Showing all products." });
+                flash_message("Showing all products.");
+            })
+            .fail(function (err) {
+                flash_message(err.responseJSON?.message || "Server error!");
+            });
+            return;
+        }
+
+        // try filtered search first
+        let queryString = "";
+        if (name && name.trim() !== "") {
+            queryString = "name=" + encodeURIComponent(name.trim());
+        } else if (category && category.trim() !== "") {
+            queryString = "category=" + encodeURIComponent(category.trim());
+        } else if (availabilityVal !== "" && availabilityVal !== null) {
+            queryString = "availability=" + (availabilityVal === "true");
+        }
+
+        $.ajax({
             type: "GET",
             url: `/products?${queryString}`,
             contentType: "application/json",
-            data: ''
+            data: ""
         })
-
-        ajax.done(function(res){
-            //alert(res.toSource())
-            $("#search_results").empty();
-            if (res.length === 0) {
+        .done(function (res) {
+            if (Array.isArray(res) && res.length > 0) {
+                // render only matches
+                renderResultsTable(res);
+                update_form_data(res[0]); 
+                flash_message("Success");
+            } else {
+                // flash not-found and fallback to full list
                 flash_message("No matching products found.");
-                return;
+                $.ajax({
+                    type: "GET",
+                    url: `/products`,
+                    contentType: "application/json",
+                    data: ""
+                })
+                .done(function (all) {
+                    renderResultsTable(all, { banner: "Showing all products" });
+                })
+                .fail(function (err) {
+                    flash_message(err.responseJSON?.message || "Server error!");
+                });
             }
-            let table = `
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">ID</th>
-                            <th style="width: 10%;">Name</th>
-                            <th style="width: 10%;">Category</th>
-                            <th style="width: 10%;">Price</th>
-                            <th style="width: 8%;">Available</th>
-                            <th style="width: 8%;">Discontinued</th>
-                            <th style="width: 8%;">Favorited</th>
-                            <th style="width: 15%;">Created Date</th>
-                            <th style="width: 15%;">Updated Date</th>
-                            <th style="width: 10%;">Image URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+        })
+        .fail(function (err) {
+            flash_message(err.responseJSON?.message || "Server error!");
+        });
+    });
 
-            let firstItem = "";
 
-            for (let i = 0; i < res.length; i++) {
-                let item = res[i];
+
+    function renderResultsTable(list, options = {}) {
+        $("#search_results").empty();
+
+        const bannerHtml = options.banner
+            ? `<div class="alert alert-info" style="padding:6px 10px; margin-bottom:8px;">${options.banner}</div>`
+            : "";
+
+        let table = `
+            ${bannerHtml}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 10%;">Name</th>
+                        <th style="width: 10%;">Category</th>
+                        <th style="width: 10%;">Price</th>
+                        <th style="width: 8%;">Available</th>
+                        <th style="width: 8%;">Discontinued</th>
+                        <th style="width: 8%;">Favorited</th>
+                        <th style="width: 15%;">Created Date</th>
+                        <th style="width: 15%;">Updated Date</th>
+                        <th style="width: 10%;">Image URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        if (!Array.isArray(list) || list.length === 0) {
+            table += `<tr><td colspan="10" class="text-center">No products available.</td></tr>`;
+        } else {
+            list.forEach((item, i) => {
                 table += `
                     <tr id="row_${i}">
                         <td>${item.id}</td>
@@ -289,28 +339,10 @@ $(function () {
                         <td>${item.image_url ? `<a href="${item.image_url}" target="_blank">View</a>` : ''}</td>
                     </tr>
                 `;
+            });
+        }
 
-                if (i === 0) {
-                    firstItem = item;
-                }
-            }
-
-            table += `
-                    </tbody>
-                </table>
-            `;
-
-            $("#search_results").append(table);
-            if (firstItem !== "") {
-                update_form_data(firstItem);
-            }
-            flash_message("Success");
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
-
-    });
-
+        table += `</tbody></table>`;
+        $("#search_results").append(table);
+    }
 })
