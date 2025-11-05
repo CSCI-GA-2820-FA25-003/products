@@ -240,7 +240,7 @@ $(function () {
             })
             .done(function (all) {
                 renderResultsTable(all, { banner: "Showing all products." });
-                flash_message("Showing all products.");
+                flash_message("Empty search. Showing all products.");
             })
             .fail(function (err) {
                 flash_message(err.responseJSON?.message || "Server error!");
@@ -272,7 +272,7 @@ $(function () {
                 flash_message("Success");
             } else {
                 // flash not-found and fallback to full list
-                flash_message("No matching products found.");
+                flash_message("No matching products found. Showing all products.");
                 $.ajax({
                     type: "GET",
                     url: `/products`,
@@ -280,7 +280,7 @@ $(function () {
                     data: ""
                 })
                 .done(function (all) {
-                    renderResultsTable(all, { banner: "Showing all products" });
+                    renderResultsTable(all, { banner: "Showing all products." });
                 })
                 .fail(function (err) {
                     flash_message(err.responseJSON?.message || "Server error!");
