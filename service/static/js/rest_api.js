@@ -309,4 +309,82 @@ $(function () {
 
     });
 
+    // ****************************************
+    // List All Products
+    // ****************************************
+
+    $("#list_all-btn").click(function () {
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/products`,
+            contentType: "application/json",
+            data: ''
+        })
+
+        ajax.done(function(res){
+            $("#search_results").empty();
+            let table = `
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 10%;">Name</th>
+                            <th style="width: 10%;">Category</th>
+                            <th style="width: 10%;">Price</th>
+                            <th style="width: 8%;">Available</th>
+                            <th style="width: 8%;">Discontinued</th>
+                            <th style="width: 8%;">Favorited</th>
+                            <th style="width: 15%;">Created Date</th>
+                            <th style="width: 15%;">Updated Date</th>
+                            <th style="width: 10%;">Image URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            let firstItem = "";
+
+            for (let i = 0; i < res.length; i++) {
+                let item = res[i];
+                table += `
+                    <tr id="row_${i}">
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.category}</td>
+                        <td>${item.price}</td>
+                        <td>${item.availability}</td>
+                        <td>${item.discontinued}</td>
+                        <td>${item.favorited}</td>
+                        <td>${item.created_date}</td>
+                        <td>${item.updated_date}</td>
+                        <td>${item.image_url ? `<a href="${item.image_url}" target="_blank">View</a>` : ''}</td>
+                    </tr>
+                `;
+
+                if (i === 0) {
+                    firstItem = item;
+                }
+            }
+
+            table += `
+                    </tbody>
+                </table>
+            `;
+
+            $("#search_results").append(table);
+            if (firstItem !== "") {
+                update_form_data(firstItem);
+            }
+            flash_message("Success");
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+
+    });
+
 })
