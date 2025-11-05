@@ -270,7 +270,7 @@ $(function () {
     // ****************************************
     // Search for a Product
     // ****************************************
-
+    
     $("#search-btn").click(function () {
         // Read search inputs
         const name = $("#product_name").val();

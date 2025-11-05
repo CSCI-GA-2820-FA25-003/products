@@ -31,13 +31,13 @@ from behave import when, then  # pylint: disable=no-name-in-module
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from selenium.common.exceptions import NoSuchElementException
 
 # For the products UI, input ids are prefixed with "product_"
 ID_PREFIX = "product_"
 
 # Common aliases for feature field names vs. HTML element IDs
 ALIASES = {
-    "SKU": "Image Url",
     "Available": "Availability",
 }
 
@@ -201,3 +201,137 @@ def step_impl(context: Any, element_name: str) -> None:
         f'Expected "{element_name}" dropdown to be reset (first option selected), '
         f'but selected="{select.first_selected_option.text.strip()}"'
     )
+
+##################################################################
+# Additional steps for Filter Scenarios
+##################################################################
+
+@then('I should not see "{text}" in the "{field}" field')
+def step_impl(context, text, field):
+    """Verify a text is not present in a specific input field"""
+    element_id = ID_PREFIX + normalize_field_name(field)
+    try:
+        element = context.driver.find_element(By.ID, element_id)
+    except NoSuchElementException:
+        raise AssertionError(f'Could not find field "{field}" (id={element_id})')
+
+    value = element.get_attribute("value") or element.text or ""
+    assert text not in value, (
+        f'Expected NOT to see "{text}" in field "{field}", but saw: "{value}"'
+    )
+
+
+@then('I should not see "{value}" for "{column}" in any result')
+def step_impl(context, value, column):
+    """Ensure a given value does not appear in any search result table row for a specific column"""
+    table = context.driver.find_element(By.ID, "search_results")
+    rows = table.find_elements(By.TAG_NAME, "tr")
+
+    # Find the header index first (if headers exist)
+    header_index = None
+    try:
+        headers = rows[0].find_elements(By.TAG_NAME, "th")
+        for idx, th in enumerate(headers):
+            if th.text.strip().lower() == column.strip().lower():
+                header_index = idx
+                break
+    except Exception:
+        pass  # Table may not have header row
+
+    for row in rows[1:]:  # skip header if present
+        cells = row.find_elements(By.TAG_NAME, "td")
+        if header_index is not None and header_index < len(cells):
+            cell_text = cells[header_index].text.strip()
+            assert value not in cell_text, (
+                f'Found "{value}" in column "{column}" for row: "{cell_text}"'
+            )
+        else:
+            # fallback: search whole row text
+            assert value not in row.text, (
+                f'Found "{value}" in result row: "{row.text}"'
+            )
+
+
+@then('I should see an empty results table')
+def step_impl(context):
+    """Verify that search results have no data rows"""
+    table = context.driver.find_element(By.ID, "search_results")
+
+    # Prefer only rows inside <tbody> if present (avoids header rows in <thead>)
+    bodies = table.find_elements(By.TAG_NAME, "tbody")
+    if bodies:
+        data_rows = []
+        for tbody in bodies:
+            data_rows.extend(tbody.find_elements(By.TAG_NAME, "tr"))
+    else:
+        # Fallback: all <tr>, but skip the first if it's a header row
+        all_rows = table.find_elements(By.TAG_NAME, "tr")
+        # Detect a header row by presence of <th> cells in the first row
+        if all_rows and all_rows[0].find_elements(By.TAG_NAME, "th"):
+            data_rows = all_rows[1:]
+        else:
+            data_rows = all_rows
+
+    def is_visible_data_row(row):
+        # Skip rows explicitly hidden
+        if not row.is_displayed():
+            return False
+        # If the row has only <th>, treat it as a header
+        if row.find_elements(By.TAG_NAME, "th") and not row.find_elements(By.TAG_NAME, "td"):
+            return False
+        # Consider a row "visible" only if any TD has non-empty text
+        tds = row.find_elements(By.TAG_NAME, "td")
+        cell_text = " ".join(td.text.replace("\u00a0", " ").strip() for td in tds)
+        return bool(cell_text.strip())
+
+    visible_data_rows = [r for r in data_rows if is_visible_data_row(r)]
+
+    assert len(visible_data_rows) == 0, (
+        f"Expected empty results table, but found {len(visible_data_rows)} row(s): "
+        f"{[r.text for r in visible_data_rows]}"
+    )
+
+
+##################################################################
+# Precise table checking for Filter results
+##################################################################
+
+def _get_result_rows(context):
+    table = context.driver.find_element(By.ID, "search_results")
+    return table.find_elements(By.CSS_SELECTOR, "tr")
+
+def _get_name_column_index(context):
+    table = context.driver.find_element(By.ID, "search_results")
+    header_cells = table.find_elements(By.CSS_SELECTOR, "th")
+    for idx, cell in enumerate(header_cells):
+        if cell.text.strip().lower() == "name":
+            return idx
+    # fallback: assume first column is Name if no headers
+    return 0
+
+def _get_names_from_results(context):
+    rows = _get_result_rows(context)
+    if len(rows) <= 1:
+        return []  # no data rows found
+    name_idx = _get_name_column_index(context)
+    names = []
+    for row in rows[1:]:  # skip header row
+        cells = row.find_elements(By.CSS_SELECTOR, "td")
+        if cells:
+            names.append(cells[name_idx].text.strip())
+    return names
+
+@then('I should not see "{name}" in the Name column of the results')
+def step_impl(context, name):
+    names = _get_names_from_results(context)
+    assert name not in names, f'Expected NOT to see "{name}", but saw rows: {names}'
+
+@then('I should see only "{name}" in the results')
+def step_impl(context, name):
+    names = _get_names_from_results(context)
+    assert names == [name], f'Expected only "{name}" but saw: {names}'
+
+@then('I should see exactly {count:d} result(s)')
+def step_impl(context, count):
+    names = _get_names_from_results(context)
+    assert len(names) == count, f"Expected {count} result(s), but saw {len(names)}: {names}"
