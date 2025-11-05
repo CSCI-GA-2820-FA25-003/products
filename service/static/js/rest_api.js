@@ -248,6 +248,10 @@ $(function () {
         ajax.done(function(res){
             //alert(res.toSource())
             $("#search_results").empty();
+            if (res.length === 0) {
+                flash_message("No matching products found.");
+                return;
+            }
             let table = `
                 <table class="table table-striped">
                     <thead>
