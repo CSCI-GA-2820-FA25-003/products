@@ -60,6 +60,32 @@ Scenario: Update a Product
     And I should see "Fidget Pro" in the results
     And I should not see "Fidget Spinner" in the results
 
+Scenario: Delete an existing product
+    When I visit the "Home Page"
+    And I set the "Name" to "iPhone 17"
+    And I set the "Category" to "Electronics"
+    And I set the "Description" to "Latest Apple smartphone"
+    And I set the "Price" to "1299.99"
+    And I set the "SKU" to "IP17-001"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "iPhone 17"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "iPhone 17" in the results
+
+    When I press the "Delete" button
+    Then I should see the message "Product has been Deleted!"
+
+    When I press the "Clear" button
+    And I set the "Name" to "iPhone 17"
+    And I press the "Search" button
+    Then I should see the message "No matching products found."
+
+
 Scenario: List all products
     When I visit the "Home Page"
     And I set the "Name" to "Laptop"
