@@ -85,3 +85,44 @@ Scenario: Delete an existing product
     And I press the "Search" button
     Then I should see the message "No matching products found."
 
+
+Scenario: List all products
+    When I visit the "Home Page"
+    And I set the "Name" to "Laptop"
+    And I set the "Category" to "Electronics"
+    And I set the "Description" to "High performance laptop"
+    And I set the "Price" to "1299.99"
+    And I set the "SKU" to "LAP-001"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Desk Chair"
+    And I set the "Category" to "Furniture"
+    And I set the "Description" to "Ergonomic office chair"
+    And I set the "Price" to "249.99"
+    And I set the "SKU" to "CHR-001"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Coffee Mug"
+    And I set the "Category" to "Kitchen"
+    And I set the "Description" to "Ceramic coffee mug"
+    And I set the "Price" to "12.99"
+    And I set the "SKU" to "MUG-001"
+    And I select "False" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I press the "List All" button
+    Then I should see the message "Success"
+    And I should see "Laptop" in the results
+    And I should see "Desk Chair" in the results
+    And I should see "Coffee Mug" in the results
+    And I should see "1299.99" in the results
+    And I should see "249.99" in the results
+    And I should see "12.99" in the results
