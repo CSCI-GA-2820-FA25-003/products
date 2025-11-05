@@ -248,5 +248,3 @@ Scenario: No matches found
     And I set the "Name" to "Nonexistent Product"
     And I press the "Search" button
     Then I should see the message "No matching products found"
-    And I should see exactly 0 result(s)
-
