@@ -57,14 +57,28 @@ def step_impl(context):
 
     # Load the database with new products
     for row in context.table:
+        availability_str = row.get("availability", row.get("available", "False"))
+        discontinued_str = row.get("discontinued", "False")
+        favorited_str = row.get("favorited", "False")
+        price_value = row.get("price", "0.0")
+
         payload = {
             "name": row["name"],
-            "category": row["category"],
+            "category": row.get("category", ""),
             "description": row.get("description", ""),
-            # Cast price to float if it's present (strip to be safe)
-            "price": float(row["price"].strip()) if "price" in row and row["price"].strip() != "" else 0.0,
-            "sku": row.get("sku", ""),
-            "available": _to_bool(row.get("available", "False")),
+            "price": price_value,
+            "image_url": row.get("image_url", ""),
+            "availability": _to_bool(availability_str),
+            "discontinued": _to_bool(discontinued_str),
+            "favorited": _to_bool(favorited_str),
         }
+
         context.resp = requests.post(rest_endpoint, json=payload, timeout=WAIT_TIMEOUT)
+
+        if (
+            context.resp.status_code != HTTP_201_CREATED
+        ):  # This is for debugging purposes only
+            print("DEBUG POST payload:", payload)
+            print("DEBUG Response:", context.resp.status_code, context.resp.text)
+
         expect(context.resp.status_code).equal_to(HTTP_201_CREATED)

@@ -3,6 +3,12 @@ Feature: The product store service back-end
     I need a RESTful catalog service
     So that I can keep track of all my products
 
+Background:
+    Given the following products
+        | name        | category | description         | price | image_url                 | availability | discontinued | favorited | sku     |
+        | Sample Lamp | Home     | Adjustable LED lamp | 39.99 | https://img.example/lamp  | True         | False        | False     | LMP-001 |
+        | Sample Mug  | Kitchen  | Ceramic coffee mug  | 12.99 |                           | False        | False        | False     | MUG-001 |
+
 Scenario: The server is running
     When I visit the "home page"
     Then I should see "Product Administration RESTful Service"
@@ -39,11 +45,11 @@ Scenario: Create a Product
 
 Scenario: Update a Product
     When I visit the "Home Page"
-    And I set the "Name" to "Fidget Spinner"
+    And I set the "Name" to "Sample Lamp"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "Fidget Spinner" in the "Name" field
-    And I should see "Toys" in the "Category" field
+    And I should see "Sample Lamp" in the "Name" field
+    And I should see "Home" in the "Category" field
     When I change "Name" to "Fidget Pro"
     And I press the "Update" button
     Then I should see the message "Success"
@@ -126,3 +132,36 @@ Scenario: List all products
     And I should see "1299.99" in the results
     And I should see "249.99" in the results
     And I should see "12.99" in the results
+
+
+Scenario: Favorite a product via Actions menu
+    When I visit the "Home Page"
+    And I set the "Name" to "Sample Lamp"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Sample Lamp" in the results
+
+    When I copy the "Id" field
+    And I press the "Clear" button
+    And I paste the "Id" field
+    And I press the "Actions" button
+    And I press the "Favorite" button
+    Then I should see the message "Product has been marked as Favorite!"
+
+Scenario: Unfavorite a product via Actions menu
+    When I visit the "Home Page"
+    And I set the "Name" to "Sample Lamp"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Sample Lamp" in the results
+
+    When I copy the "Id" field
+    And I press the "Clear" button
+    And I paste the "Id" field
+    And I press the "Actions" button
+    And I press the "Favorite" button
+    Then I should see the message "Product has been marked as Favorite!"
+
+    When I press the "Actions" button
+    And I press the "Unfavorite" button
+    Then I should see the message "Product has been un-favorited!"
