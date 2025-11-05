@@ -176,6 +176,61 @@ $(function () {
     });
 
     // ****************************************
+    // Favorite/unfavorite a Product
+    // ****************************************
+    $("#favorite-btn").click(function () {
+
+        let product_id = $("#product_id").val();
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/products/${product_id}/favorite`,
+            contentType: "application/json",
+            data: '',
+        });
+
+        ajax.done(function(res){
+            flash_message("Product has been marked as Favorite!");
+        });
+
+        ajax.fail(function(res){
+            let msg = "Server error!";
+            if (res.responseJSON && res.responseJSON.message) {
+                msg = res.responseJSON.message;
+            }
+            flash_message(msg);
+        });
+    });
+
+
+    $("#unfavorite-btn").click(function () {
+
+        let product_id = $("#product_id").val();
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/products/${product_id}/unfavorite`,
+            contentType: "application/json",
+            data: '',
+        });
+
+        ajax.done(function(res){
+            flash_message("Product has been un-favorited!");
+        });
+
+        ajax.fail(function(res){
+            let msg = "Server error!";
+            if (res.responseJSON && res.responseJSON.message) {
+                msg = res.responseJSON.message;
+            }
+            flash_message(msg);
+        });
+    });
+
+
+    // ****************************************
     // Delete a Product
     // ****************************************
 
@@ -345,6 +400,7 @@ $(function () {
         table += `</tbody></table>`;
         $("#search_results").append(table);
     }
+
     // ****************************************
     // List All Products
     // ****************************************
