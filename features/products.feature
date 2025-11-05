@@ -136,14 +136,10 @@ Scenario: List all products
 
 Scenario: Favorite a product via Actions menu
     When I visit the "Home Page"
-    And I set the "Name" to "Desk Lamp"
-    And I set the "Category" to "Home"
-    And I set the "Description" to "Adjustable LED lamp"
-    And I set the "Price" to "39.99"
-    And I set the "SKU" to "LMP-001"
-    And I select "True" in the "Available" dropdown
-    And I press the "Create" button
+    And I set the "Name" to "Sample Lamp"
+    And I press the "Search" button
     Then I should see the message "Success"
+    And I should see "Sample Lamp" in the results
 
     When I copy the "Id" field
     And I press the "Clear" button
@@ -154,14 +150,10 @@ Scenario: Favorite a product via Actions menu
 
 Scenario: Unfavorite a product via Actions menu
     When I visit the "Home Page"
-    And I set the "Name" to "Mouse Pad"
-    And I set the "Category" to "Accessories"
-    And I set the "Description" to "Non-slip mouse pad"
-    And I set the "Price" to "7.99"
-    And I set the "SKU" to "MSP-001"
-    And I select "True" in the "Available" dropdown
-    And I press the "Create" button
+    And I set the "Name" to "Sample Lamp"
+    And I press the "Search" button
     Then I should see the message "Success"
+    And I should see "Sample Lamp" in the results
 
     When I copy the "Id" field
     And I press the "Clear" button
