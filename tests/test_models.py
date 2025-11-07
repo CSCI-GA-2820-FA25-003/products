@@ -234,10 +234,12 @@ class TestProducts(TestCase):
             self.assertIn("update boom", str(ctx.exception))
             mock_rb.assert_called_once()
 
-    def test_deserialize_attribute_error_when_mapping_lacks_get(self):
+    def test_deserialize_attr_error_no_get(self):
         """deserialize() should raise DataValidationError on objects without .get (AttributeError path)"""
 
         class IndexOnly:
+            """A mapping-like class that only implements __getitem__, not .get()."""
+
             def __init__(self, d):
                 self._d = d
 
