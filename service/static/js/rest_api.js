@@ -170,8 +170,14 @@ $(function () {
 
         ajax.fail(function(res){
             clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+            if (res.status === 404) {
+                flash_message("404 Not Found")
+            } else if (res.responseJSON && res.responseJSON.message) {
+                flash_message(res.responseJSON.message)
+            } else {
+                flash_message("Server error!")
+            }
+});
 
     });
 
