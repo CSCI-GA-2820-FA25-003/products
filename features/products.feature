@@ -5,9 +5,9 @@ Feature: The product store service back-end
 
 Background:
     Given the following products
-        | name        | category | description         | price | image_url                 | availability | discontinued | favorited | 
-        | Sample Lamp | Home     | Adjustable LED lamp | 39.99 | https://img.example/lamp  | True         | False        | False     | 
-        | Sample Mug  | Kitchen  | Ceramic coffee mug  | 12.99 |                           | False        | False        | False     | 
+        | name        | category | description         | price | image_url                 | availability | discontinued | favorited |
+        | Sample Lamp | Home     | Adjustable LED lamp | 39.99 | https://img.example/lamp  | True         | False        | False     |
+        | Sample Mug  | Kitchen  | Ceramic coffee mug  | 12.99 |                           | False        | False        | False     |
 
 Scenario: The server is running
     When I visit the "home page"
@@ -248,3 +248,27 @@ Scenario: No matches found
     And I set the "Name" to "Nonexistent Product"
     And I press the "Search" button
     Then I should see the message "No matching products found"
+
+ Scenario: Read a Product by ID
+    When I visit the "Home Page"
+    And I set the "Name" to "Sample Lamp"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Sample Lamp" in the results
+    When I copy the "Id" field
+    And I press the "Clear" button
+    And I paste the "Id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "Sample Lamp" in the "Name" field
+    And I should see "Home" in the "Category" field
+    And I should see "Adjustable LED lamp" in the "Description" field
+    And I should see "39.99" in the "Price" field
+    And I should see "https://img.example/lamp" in the "Image Url" field
+    And I should see "True" in the "Available" dropdown
+
+Scenario: Read a Non-existent Product
+    When I visit the "Home Page"
+    And I set the "Id" to "999999"
+    And I press the "Retrieve" button
+    Then I should see the message "404 Not Found"
