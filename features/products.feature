@@ -272,3 +272,100 @@ Scenario: Read a Non-existent Product
     And I set the "Id" to "999999"
     And I press the "Retrieve" button
     Then I should see the message "404 Not Found"
+
+Scenario: Reset pagination controls
+    When I visit the "Home Page"
+    And I set the "Page Number" to "5"
+    And I set the "Items per Page" to "25"
+    And I press the "Reset" button
+    Then I should see the message "Pagination reset"
+    And I should see "1" in the "Page Number" field
+    And I should see "10" in the "Items per Page" field
+
+Scenario: Pagination with no results on high page number
+    When I visit the "Home Page"
+    And I set the "Page Number" to "999"
+    And I set the "Items per Page" to "10"
+    And I press the "Apply Pagination" button
+    Then I should see the message "No products found on page 999"
+    And I should see an empty results table
+
+Scenario: Paginate through products with page 1
+    When I visit the "Home Page"
+    And I set the "Name" to "Wireless Mouse"
+    And I set the "Category" to "Electronics"
+    And I set the "Price" to "29.99"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "USB Cable"
+    And I set the "Category" to "Electronics"
+    And I set the "Price" to "12.99"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Keyboard"
+    And I set the "Category" to "Electronics"
+    And I set the "Price" to "79.99"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Page Number" to "1"
+    And I set the "Items per Page" to "2"
+    And I press the "Apply Pagination" button
+    Then I should see the message "Success - Showing page 1 (2 items)"
+    And I should see exactly 2 result(s)
+
+Scenario: Paginate through products with page 2
+    When I visit the "Home Page"
+    And I set the "Name" to "Monitor Stand"
+    And I set the "Category" to "Furniture"
+    And I set the "Price" to "45.00"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Desk Organizer"
+    And I set the "Category" to "Furniture"
+    And I set the "Price" to "18.50"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Table Lamp"
+    And I set the "Category" to "Home"
+    And I set the "Price" to "35.99"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Wall Clock"
+    And I set the "Category" to "Home"
+    And I set the "Price" to "22.00"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Name" to "Picture Frame"
+    And I set the "Category" to "Home"
+    And I set the "Price" to "15.99"
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I press the "Clear" button
+    And I set the "Page Number" to "2"
+    And I set the "Items per Page" to "2"
+    And I press the "Apply Pagination" button
+    Then I should see the message "Success - Showing page 2 (2 items)"
+    And I should see exactly 2 result(s)

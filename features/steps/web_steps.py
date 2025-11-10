@@ -81,7 +81,16 @@ def step_impl(context: Any, text_string: str) -> None:
 
 @when('I set the "{element_name}" to "{text_string}"')
 def step_impl(context: Any, element_name: str, text_string: str) -> None:
-    element_id = ID_PREFIX + normalize_field_name(element_name)
+    pagination_fields = {
+        "Page Number": "pagination_page",
+        "Items per Page": "pagination_limit",
+    }
+
+    if element_name in pagination_fields:
+        element_id = pagination_fields[element_name]
+    else:
+        element_id = ID_PREFIX + normalize_field_name(element_name)
+
     element = context.driver.find_element(By.ID, element_id)
     element.clear()
     element.send_keys(text_string)
@@ -136,7 +145,16 @@ def step_impl(context: Any, element_name: str) -> None:
 ##################################################################
 @when('I press the "{button}" button')
 def step_impl(context: Any, button: str) -> None:
-    button_id = button.lower().replace(" ", "_") + "-btn"
+    pagination_buttons = {
+        "Apply Pagination": "paginate-btn",
+        "Reset": "reset-pagination-btn",
+    }
+
+    if button in pagination_buttons:
+        button_id = pagination_buttons[button]
+    else:
+        button_id = button.lower().replace(" ", "_") + "-btn"
+
     context.driver.find_element(By.ID, button_id).click()
 
 
