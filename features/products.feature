@@ -279,16 +279,16 @@ Scenario: Reset pagination controls
     And I set the "Items per Page" to "25"
     And I press the "Reset" button
     Then I should see the message "Pagination reset"
-    And I should see "1" in the "Page Number" field
-    And I should see "10" in the "Items per Page" field
+    And I should see "1" in the "Pagination page" field
+    And I should see "10" in the "Pagination limit" field
 
 Scenario: Pagination with no results on high page number
     When I visit the "Home Page"
     And I set the "Page Number" to "999"
     And I set the "Items per Page" to "10"
-    And I press the "Apply Pagination" button
+    And I press the "List All (Paginated)" button
     Then I should see the message "No products found on page 999"
-    And I should see an empty results table
+    And I should see "No products available." in the results
 
 Scenario: Paginate through products with page 1
     When I visit the "Home Page"
@@ -318,7 +318,7 @@ Scenario: Paginate through products with page 1
     When I press the "Clear" button
     And I set the "Page Number" to "1"
     And I set the "Items per Page" to "2"
-    And I press the "Apply Pagination" button
+    And I press the "List All (Paginated)" button
     Then I should see the message "Success - Showing page 1 (2 items)"
     And I should see exactly 2 result(s)
 
@@ -366,6 +366,6 @@ Scenario: Paginate through products with page 2
     When I press the "Clear" button
     And I set the "Page Number" to "2"
     And I set the "Items per Page" to "2"
-    And I press the "Apply Pagination" button
+    And I press the "List All (Paginated)" button
     Then I should see the message "Success - Showing page 2 (2 items)"
     And I should see exactly 2 result(s)

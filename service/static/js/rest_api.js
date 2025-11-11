@@ -372,8 +372,8 @@ $(function () {
     // ****************************************
 
     $("#paginate-btn").click(function () {
-        let page = parseInt($("#pagination_page").val()) || 1;
-        let limit = parseInt($("#pagination_limit").val()) || 10;
+        let page = parseInt($("#product_pagination_page").val()) || 1;
+        let limit = parseInt($("#product_pagination_limit").val()) || 10;
 
         // Validate inputs
         if (page < 1) page = 1;
@@ -381,8 +381,8 @@ $(function () {
         if (limit > 100) limit = 100;
 
         // Update the input fields with validated values
-        $("#pagination_page").val(page);
-        $("#pagination_limit").val(limit);
+        $("#product_pagination_page").val(page);
+        $("#product_pagination_limit").val(limit);
 
         $("#flash_message").empty();
 
@@ -409,8 +409,8 @@ $(function () {
     });
 
     $("#reset-pagination-btn").click(function () {
-        $("#pagination_page").val("1");
-        $("#pagination_limit").val("10");
+        $("#product_pagination_page").val("1");
+        $("#product_pagination_limit").val("10");
         hide_pagination_info();
         flash_message("Pagination reset");
     });
