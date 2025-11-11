@@ -38,13 +38,19 @@ ID_PREFIX = "product_"
 
 # Common aliases for feature field names vs. HTML element IDs
 ALIASES = {
+    "Page Number": "Pagination Page",
+    "Items per Page": "Pagination Limit",
+    "List All (Paginated)": "paginate",
+    "Reset": "reset-pagination",
     "Available": "Availability",
 }
+
 
 def normalize_field_name(name: str) -> str:
     """Normalize field names and apply alias mapping"""
     actual = ALIASES.get(name, name)
     return actual.lower().replace(" ", "_")
+
 
 def save_screenshot(context: Any, filename: str) -> None:
     """Takes a snapshot of the web page for debugging and validation"""
@@ -82,6 +88,7 @@ def step_impl(context: Any, text_string: str) -> None:
 @when('I set the "{element_name}" to "{text_string}"')
 def step_impl(context: Any, element_name: str, text_string: str) -> None:
     element_id = ID_PREFIX + normalize_field_name(element_name)
+
     element = context.driver.find_element(By.ID, element_id)
     element.clear()
     element.send_keys(text_string)
@@ -136,7 +143,7 @@ def step_impl(context: Any, element_name: str) -> None:
 ##################################################################
 @when('I press the "{button}" button')
 def step_impl(context: Any, button: str) -> None:
-    button_id = button.lower().replace(" ", "_") + "-btn"
+    button_id = normalize_field_name(button) + "-btn"
     context.driver.find_element(By.ID, button_id).click()
 
 
@@ -202,9 +209,11 @@ def step_impl(context: Any, element_name: str) -> None:
         f'but selected="{select.first_selected_option.text.strip()}"'
     )
 
+
 ##################################################################
 # Additional steps for Filter Scenarios
 ##################################################################
+
 
 @then('I should not see "{text}" in the "{field}" field')
 def step_impl(context, text, field):
@@ -216,9 +225,9 @@ def step_impl(context, text, field):
         raise AssertionError(f'Could not find field "{field}" (id={element_id})')
 
     value = element.get_attribute("value") or element.text or ""
-    assert text not in value, (
-        f'Expected NOT to see "{text}" in field "{field}", but saw: "{value}"'
-    )
+    assert (
+        text not in value
+    ), f'Expected NOT to see "{text}" in field "{field}", but saw: "{value}"'
 
 
 @then('I should not see "{value}" for "{column}" in any result')
@@ -242,17 +251,15 @@ def step_impl(context, value, column):
         cells = row.find_elements(By.TAG_NAME, "td")
         if header_index is not None and header_index < len(cells):
             cell_text = cells[header_index].text.strip()
-            assert value not in cell_text, (
-                f'Found "{value}" in column "{column}" for row: "{cell_text}"'
-            )
+            assert (
+                value not in cell_text
+            ), f'Found "{value}" in column "{column}" for row: "{cell_text}"'
         else:
             # fallback: search whole row text
-            assert value not in row.text, (
-                f'Found "{value}" in result row: "{row.text}"'
-            )
+            assert value not in row.text, f'Found "{value}" in result row: "{row.text}"'
 
 
-@then('I should see an empty results table')
+@then("I should see an empty results table")
 def step_impl(context):
     """Verify that search results have no data rows"""
     table = context.driver.find_element(By.ID, "search_results")
@@ -277,7 +284,9 @@ def step_impl(context):
         if not row.is_displayed():
             return False
         # If the row has only <th>, treat it as a header
-        if row.find_elements(By.TAG_NAME, "th") and not row.find_elements(By.TAG_NAME, "td"):
+        if row.find_elements(By.TAG_NAME, "th") and not row.find_elements(
+            By.TAG_NAME, "td"
+        ):
             return False
         # Consider a row "visible" only if any TD has non-empty text
         tds = row.find_elements(By.TAG_NAME, "td")
@@ -296,9 +305,11 @@ def step_impl(context):
 # Precise table checking for Filter results
 ##################################################################
 
+
 def _get_result_rows(context):
     table = context.driver.find_element(By.ID, "search_results")
     return table.find_elements(By.CSS_SELECTOR, "tr")
+
 
 def _get_name_column_index(context):
     table = context.driver.find_element(By.ID, "search_results")
@@ -308,6 +319,7 @@ def _get_name_column_index(context):
             return idx
     # fallback: assume first column is Name if no headers
     return 0
+
 
 def _get_names_from_results(context):
     rows = _get_result_rows(context)
@@ -321,17 +333,22 @@ def _get_names_from_results(context):
             names.append(cells[name_idx].text.strip())
     return names
 
+
 @then('I should not see "{name}" in the Name column of the results')
 def step_impl(context, name):
     names = _get_names_from_results(context)
     assert name not in names, f'Expected NOT to see "{name}", but saw rows: {names}'
+
 
 @then('I should see only "{name}" in the results')
 def step_impl(context, name):
     names = _get_names_from_results(context)
     assert names == [name], f'Expected only "{name}" but saw: {names}'
 
-@then('I should see exactly {count:d} result(s)')
+
+@then("I should see exactly {count:d} result(s)")
 def step_impl(context, count):
     names = _get_names_from_results(context)
-    assert len(names) == count, f"Expected {count} result(s), but saw {len(names)}: {names}"
+    assert (
+        len(names) == count
+    ), f"Expected {count} result(s), but saw {len(names)}: {names}"

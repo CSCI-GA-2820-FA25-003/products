@@ -52,6 +52,18 @@ $(function () {
         $("#flash_message").append(message);
     }
 
+    // Show pagination info
+    function show_pagination_info(page, limit) {
+        $("#current_page_display").text(page);
+        $("#current_limit_display").text(limit);
+        $("#pagination_info").show();
+    }
+
+    // Hide pagination info
+    function hide_pagination_info() {
+        $("#pagination_info").hide();
+    }
+
     // ****************************************
     // Create a Product
     // ****************************************
@@ -80,7 +92,7 @@ $(function () {
         };
 
         $("#flash_message").empty();
-        
+
         let ajax = $.ajax({
             type: "POST",
             url: "/products",
@@ -170,7 +182,10 @@ $(function () {
 
         ajax.fail(function(res){
             clear_form_data()
-            if (res.responseJSON && res.responseJSON.message) {
+            // Display appropriate error message based on status code
+            if (res.status === 404) {
+                flash_message("404 Not Found")
+            } else if (res.responseJSON && res.responseJSON.message) {
                 flash_message(res.responseJSON.message)
             } else {
                 flash_message("Server error!")
@@ -274,7 +289,7 @@ $(function () {
     // ****************************************
     // Search for a Product
     // ****************************************
-    
+
     $("#search-btn").click(function () {
         // Read search inputs
         const name = $("#product_name").val();
@@ -288,6 +303,7 @@ $(function () {
             (availabilityVal === "" || availabilityVal === null);
 
         $("#flash_message").empty();
+        hide_pagination_info(); // Hide pagination info for search
 
         // fetch all products directly
         if (noFilters) {
@@ -327,7 +343,7 @@ $(function () {
             if (Array.isArray(res) && res.length > 0) {
                 // render only matches
                 renderResultsTable(res);
-                update_form_data(res[0]); 
+                update_form_data(res[0]);
                 flash_message("Success");
             } else {
                 // flash not-found and fallback to full list
@@ -351,7 +367,57 @@ $(function () {
         });
     });
 
+    // ****************************************
+    // Pagination Controls - NEW!
+    // ****************************************
 
+    $("#paginate-btn").click(function () {
+        let page = parseInt($("#product_pagination_page").val()) || 1;
+        let limit = parseInt($("#product_pagination_limit").val()) || 10;
+
+        // Validate inputs
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 10;
+        if (limit > 100) limit = 100;
+
+        // Update the input fields with validated values
+        $("#product_pagination_page").val(page);
+        $("#product_pagination_limit").val(limit);
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/products?page=${page}&limit=${limit}`,
+            contentType: "application/json",
+            data: ''
+        });
+
+        ajax.done(function(res){
+            renderResultsTable(res);
+            show_pagination_info(page, limit);
+            if (res.length === 0) {
+                flash_message(`No products found on page ${page}`);
+            } else {
+                flash_message(`Success - Showing page ${page} (${res.length} items)`);
+            }
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON?.message || "Server error!");
+        });
+    });
+
+    $("#reset-pagination-btn").click(function () {
+        $("#product_pagination_page").val("1");
+        $("#product_pagination_limit").val("10");
+        hide_pagination_info();
+        flash_message("Pagination reset");
+    });
+
+    // ****************************************
+    // Render Results Table
+    // ****************************************
 
     function renderResultsTable(list, options = {}) {
         $("#search_results").empty();
@@ -412,6 +478,7 @@ $(function () {
     $("#list_all-btn").click(function () {
 
         $("#flash_message").empty();
+        hide_pagination_info(); // Hide pagination info for list all
 
         let ajax = $.ajax({
             type: "GET",
