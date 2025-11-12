@@ -248,6 +248,35 @@ $(function () {
         });
     });
 
+    // ****************************************
+    // Discontinue a Product
+    // ****************************************
+    $("#discontinue-btn").click(function () {
+
+        let product_id = $("#product_id").val();
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "POST",
+            url: `/products/${product_id}/discontinue`,
+            contentType: "application/json",
+            data: JSON.stringify({"confirm": true}),
+        });
+
+        ajax.done(function(res){
+            update_form_data(res);
+            flash_message("Product has been Discontinued!");
+        });
+
+        ajax.fail(function(res){
+            let msg = "Server error!";
+            if (res.responseJSON && res.responseJSON.message) {
+                msg = res.responseJSON.message;
+            }
+            flash_message(msg);
+        });
+    });
+
 
     // ****************************************
     // Delete a Product

@@ -160,6 +160,20 @@ Scenario: Unfavorite a product via Actions menu
     And I press the "Unfavorite" button
     Then I should see the message "Product has been un-favorited!"
 
+Scenario: Discontinue a product via Actions menu
+    When I visit the "Home Page"
+    And I set the "Name" to "Sample Mug"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Sample Mug" in the results
+
+    When I copy the "Id" field
+    And I press the "Clear" button
+    And I paste the "Id" field
+    And I press the "Actions" button
+    And I press the "Discontinue" button
+    Then I should see the message "Product has been Discontinued!"
+
 
 Scenario: Filter by Name (exact match)
     When I visit the "Home Page"
