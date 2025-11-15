@@ -34,6 +34,7 @@ DATABASE_URI = os.getenv(
 )
 
 BASE_URL = "/products"
+BASE_URL_API = "/api/products"
 
 
 ######################################################################
@@ -103,7 +104,7 @@ class TestYourResourceService(TestCase):
     ######################################################################
     def test_health(self):
         """It should check the health endpoint"""
-        resp = self.client.get("/health")
+        resp = self.client.get("/api/health")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.get_json()
