@@ -25,9 +25,23 @@ import secrets
 from functools import wraps
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from flask_restx import Api, Resouce, feilds, reqparse, imnputs
+from flask_restx import Api, Resource, fields, reqparse, inputs
 from service.models import Products
 from service.common import status  # HTTP Status Codes
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(
+    app,
+    version="1.0.0",
+    title="Product Administration RESTful Service",
+    description="RESTful API for product management operations.",
+    default="products",
+    default_label="Products operations",
+    doc="/apidocs",  # default also could use doc='/apidocs/'
+    prefix="/api",
+)
 
 
 ######################################################################
@@ -37,28 +51,6 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Base URL for our service"""
     return app.send_static_file("index.html")
-    # return (
-    #     jsonify(
-    #         {
-    #             "name": "Products REST API Service",
-    #             "version": "1.0.0",
-    #             "description": "Provides RESTful API for managing product inventory",
-    #             "endpoints": {
-    #                 "health": "/health (GET)",
-    #                 "list_products": "/products (GET)",
-    #                 "create_product": "/products (POST)",
-    #                 "get_product": "/products/<product_id> (GET)",
-    #                 "update_product": "/products/<product_id> (PUT)",
-    #                 "delete_product": "/products/<product_id> (DELETE)",
-    #                 "discontinue_product": "/products/<product_id>/discontinue (POST)",
-    #                 "favorite_product": "/products/<product_id>/favorite (PUT)",
-    #                 "unfavorite_product": "/products/<product_id>/unfavorite (PUT)",
-    #             },
-    #             "status": "healthy",
-    #         }
-    #     ),
-    #     status.HTTP_200_OK,
-    # )
 
 
 ######################################################################
@@ -66,11 +58,18 @@ def index():
 ######################################################################
 
 
-@app.route("/health")
-def health():
-    """Health check endpoint for Kubernetes"""
-    app.logger.info("Health check requested")
-    return jsonify({"status": "OK"}), status.HTTP_200_OK
+@api.route("/health")
+class Health(Resource):
+    """Health check endpoint for Kubernetes.
+
+    This endpoint is used by Kubernetes liveness and readiness probes
+    to verify that the service is running properly.
+    """
+
+    def get(self):
+        """Health check endpoint for Kubernetes"""
+        app.logger.info("Health check requested")
+        return {"status": "OK"}, status.HTTP_200_OK
 
 
 ######################################################################
