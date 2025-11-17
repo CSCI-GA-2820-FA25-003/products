@@ -21,8 +21,11 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Products
 """
 
+import secrets
+from functools import wraps
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
+from flask_restx import Api, Resouce, feilds, reqparse, imnputs
 from service.models import Products
 from service.common import status  # HTTP Status Codes
 
