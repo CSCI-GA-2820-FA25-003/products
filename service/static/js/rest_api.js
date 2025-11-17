@@ -141,7 +141,7 @@ $(function () {
 
         let ajax = $.ajax({
                 type: "PUT",
-                url: `/products/${product_id}`,
+                url: `//api/products/${product_id}`,
                 contentType: "application/json",
                 data: JSON.stringify(data)
             })
@@ -169,7 +169,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/products/${product_id}`,
+            url: `//api/products/${product_id}`,
             contentType: "application/json",
             data: ''
         })
@@ -204,7 +204,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/products/${product_id}/favorite`,
+            url: `//api/products/${product_id}/favorite`,
             contentType: "application/json",
             data: '',
         });
@@ -230,7 +230,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/products/${product_id}/unfavorite`,
+            url: `//api/products/${product_id}/unfavorite`,
             contentType: "application/json",
             data: '',
         });
@@ -258,7 +258,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: `/products/${product_id}/discontinue`,
+            url: `//api/products/${product_id}/discontinue`,
             contentType: "application/json",
             data: JSON.stringify({"confirm": true}),
         });
@@ -290,7 +290,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `/products/${product_id}`,
+            url: `//api/products/${product_id}`,
             contentType: "application/json",
             data: '',
         })
