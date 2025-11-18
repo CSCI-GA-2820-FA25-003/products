@@ -24,7 +24,7 @@ and Delete Products
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse, inputs
-from service.models import Products
+from service.models import Products, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 ######################################################################
