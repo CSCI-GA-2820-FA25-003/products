@@ -24,7 +24,7 @@ and Delete Products
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse, inputs
-from service.models import Products
+from service.models import Products, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 ######################################################################
@@ -41,7 +41,6 @@ api = Api(
     prefix="/api",
 )
 
-
 ######################################################################
 # GET INDEX
 ######################################################################
@@ -50,12 +49,9 @@ def index():
     """Base URL for our service"""
     return app.send_static_file("index.html")
 
-
 ######################################################################
 # HEALTH CHECK
 ######################################################################
-
-
 @api.route("/health")
 class Health(Resource):
     """Health check endpoint for Kubernetes.
@@ -69,11 +65,44 @@ class Health(Resource):
         app.logger.info("Health check requested")
         return {"status": "OK"}, status.HTTP_200_OK
 
+######################################################################
+# SWAGGER MODELS
+######################################################################
+product_model = api.model(
+    "Product",
+    {
+        "id": fields.Integer(readOnly=True),
+        "name": fields.String,
+        "category": fields.String,
+        "available": fields.Boolean(attribute="availability"),
+        "description": fields.String,
+        "price": fields.Float,
+        "favorited": fields.Boolean,
+        "discontinued": fields.Boolean,
+    },
+)
+
+create_model = api.model(
+    "CreateProduct",
+    {
+        "name": fields.String(required=True),
+        "category": fields.String,
+        "available": fields.Boolean(attribute="availability"),
+        "description": fields.String,
+        "price": fields.Float,
+    },
+)
+
+product_args = reqparse.RequestParser()
+product_args.add_argument("category", type=str)
+product_args.add_argument("name", type=str)
+product_args.add_argument("availability", type=str)
+product_args.add_argument("page", type=int)
+product_args.add_argument("limit", type=int)
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
-
 
 ######################################################################
 # LIST ALL products
