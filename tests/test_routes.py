@@ -34,6 +34,7 @@ DATABASE_URI = os.getenv(
 )
 
 BASE_URL = "/api/products"
+BASE_URL_API = "/api/products"
 
 
 ######################################################################
