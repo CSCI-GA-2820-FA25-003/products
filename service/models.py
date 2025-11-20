@@ -102,8 +102,8 @@ class Products(db.Model):
             "availability": self.availability,
             "favorited": self.favorited,
             "discontinued": self.discontinued,
-            "created_date": self.created_date,
-            "updated_date": self.updated_date,
+            "created_date": self.created_date.isoformat() if self.created_date else None,
+            "updated_date": self.updated_date.isoformat() if self.updated_date else None,
         }
 
     def deserialize(self, data):
