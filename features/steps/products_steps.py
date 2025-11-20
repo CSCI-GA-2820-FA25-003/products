@@ -44,7 +44,7 @@ def step_impl(context):
     """Delete all Products and load new ones"""
 
     # Get a list of all products
-    rest_endpoint = f"{context.base_url}/products"
+    rest_endpoint = f"{context.base_url}/api/products"
     context.resp = requests.get(rest_endpoint, timeout=WAIT_TIMEOUT)
     expect(context.resp.status_code).equal_to(HTTP_200_OK)
 
