@@ -20,7 +20,6 @@ and SQL database
 """
 import sys
 from flask import Flask
-from flask_restx import Api
 from service import config
 from service.common import log_handlers
 
@@ -33,16 +32,6 @@ def create_app():
     # Create Flask application
     app = Flask(__name__)
     app.config.from_object(config)
-        api = Api(
-        app,
-        version="1.0.0",
-        title="Product Demo REST API Service",
-        description="This is a sample Product server.",
-        default="products",
-        default_label="Product operations",
-        doc="/apidocs",  # default also could use doc='/apidocs/'
-        prefix="/api",
-)
 
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
