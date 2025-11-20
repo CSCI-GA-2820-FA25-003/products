@@ -22,7 +22,6 @@ from service.routes import api
 from service.models import DataValidationError, DatabaseConnectionError
 from . import status
 
-
 ######################################################################
 # Error Handlers
 ######################################################################

@@ -15,8 +15,12 @@ logger = logging.getLogger("flask.app")
 db = SQLAlchemy()
 
 
+class DatabaseConnectionError(Exception):
+    """Custom Exception when database connection fails"""
+
+
 class DataValidationError(Exception):
-    """Used for an data validation errors when deserializing"""
+    """Custom Exception with data validation fails"""
 
 
 # pylint: disable=too-many-instance-attributes
