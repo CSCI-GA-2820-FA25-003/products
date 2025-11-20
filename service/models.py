@@ -3,10 +3,9 @@ Models for Products
 
 All of the models are stored in this module
 """
-
-from datetime import datetime, timezone
 import logging
-
+from enum import Enum
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 logger = logging.getLogger("flask.app")
