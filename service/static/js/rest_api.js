@@ -95,7 +95,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: "/products",
+            url: "/api/products",
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -141,7 +141,7 @@ $(function () {
 
         let ajax = $.ajax({
                 type: "PUT",
-                url: `//api/products/${product_id}`,
+                url: `/api/products/${product_id}`,
                 contentType: "application/json",
                 data: JSON.stringify(data)
             })
@@ -169,7 +169,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `//api/products/${product_id}`,
+            url: `/api/products/${product_id}`,
             contentType: "application/json",
             data: ''
         })
@@ -204,7 +204,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `//api/products/${product_id}/favorite`,
+            url: `/api/products/${product_id}/favorite`,
             contentType: "application/json",
             data: '',
         });
@@ -230,7 +230,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `//api/products/${product_id}/unfavorite`,
+            url: `/api/products/${product_id}/unfavorite`,
             contentType: "application/json",
             data: '',
         });
@@ -258,7 +258,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: `//api/products/${product_id}/discontinue`,
+            url: `/api/products/${product_id}/discontinue`,
             contentType: "application/json",
             data: JSON.stringify({"confirm": true}),
         });
@@ -290,7 +290,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `//api/products/${product_id}`,
+            url: `/api/products/${product_id}`,
             contentType: "application/json",
             data: '',
         })
@@ -338,7 +338,7 @@ $(function () {
         if (noFilters) {
             $.ajax({
                 type: "GET",
-                url: `/products`,
+                url: `/api/products`,
                 contentType: "application/json",
                 data: ""
             })
@@ -364,7 +364,7 @@ $(function () {
 
         $.ajax({
             type: "GET",
-            url: `/products?${queryString}`,
+            url: `/api/products?${queryString}`,
             contentType: "application/json",
             data: ""
         })
@@ -379,7 +379,7 @@ $(function () {
                 flash_message("No matching products found. Showing all products.");
                 $.ajax({
                     type: "GET",
-                    url: `/products`,
+                    url: `/api/products`,
                     contentType: "application/json",
                     data: ""
                 })
@@ -417,7 +417,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/products?page=${page}&limit=${limit}`,
+            url: `/api/products?page=${page}&limit=${limit}`,
             contentType: "application/json",
             data: ''
         });
@@ -511,7 +511,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/products`,
+            url: `/api/products`,
             contentType: "application/json",
             data: ''
         })
