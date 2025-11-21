@@ -54,6 +54,7 @@ def handle_method_not_allowed(error):
         "message": "The method is not allowed for the requested URL.",
     }, status.HTTP_405_METHOD_NOT_ALLOWED
 
+
 ######################################################################
 # GET INDEX
 ######################################################################
@@ -63,6 +64,7 @@ def handle_method_not_allowed(error):
 def index():
     """Base URL for our service"""
     return app.send_static_file("index.html")
+
 
 ######################################################################
 # HEALTH CHECK
@@ -82,35 +84,41 @@ class Health(Resource):
         app.logger.info("Health check requested")
         return {"status": "OK"}, status.HTTP_200_OK
 
+
 ######################################################################
 # SWAGGER MODELS
 ######################################################################
 
-
-product_model = api.model(
-    "Product",
-    {
-        "id": fields.Integer(readOnly=True),
-        "name": fields.String,
-        "category": fields.String,
-        "availability": fields.Boolean,
-        "description": fields.String,
-        "price": fields.String,
-        "image_url": fields.String,
-        "favorited": fields.Boolean,
-        "discontinued": fields.Boolean,
-    },
-)
-
 create_model = api.model(
-    "CreateProduct",
+    "Product",
     {
         "name": fields.String(required=True),
         "category": fields.String,
         "availability": fields.Boolean,
         "description": fields.String,
-        "price": fields.String,
+        "price": fields.String(
+            required=True,
+            description=(
+                "Product price as a numeric string. Must be a valid decimal number with up to "
+                "two decimal places (e.g., '19.99'). Do NOT send floats (e.g., 19.99) to avoid "
+                "precision loss — always send the value as a string."
+            ),
+            example="119.99",
+        ),
         "image_url": fields.String,
+    },
+)
+
+
+product_model = api.inherit(
+    "ProductModel",
+    create_model,
+    {
+        "id": fields.Integer(readOnly=True),
+        "favorited": fields.Boolean,
+        "discontinued": fields.Boolean,
+        "created_date": fields.DateTime(readOnly=True),
+        "updated_date": fields.DateTime(readOnly=True),
     },
 )
 
@@ -379,6 +387,7 @@ class ProductUnfavoriteResource(Resource):
             product.update()
 
         return {"id": product.id, "favorited": False}, status.HTTP_200_OK
+
 
 ######################################################################
 # Checks the ContentType of a request
