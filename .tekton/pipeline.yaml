@@ -76,3 +76,42 @@ spec:
           workspace: products-pipline-workspace
   workspaces:
     - name: products-pipline-workspace
+
+    - name: pylint
+    params:
+    - name: image
+      value: 'docker.io/rofrano/nyu-devops-base:fa25'
+    - name: path
+      value: service
+    - name: requirements_file
+      value: requirements.txt
+    - name: args
+      value: ["--max-line-length=127"]
+    - name: pip_conf_file
+      value: pip.conf
+    runAfter:
+    - pylint
+    - testing
+    taskRef:
+      kind: Task
+      name: pylint
+    workspaces:
+    - name: source
+      workspace: pipeline-workspace
+
+  - name: testing
+    params:
+      - name: ARGS
+        value: $(params.GREEN_ARGS)
+      - name: SECRET_NAME
+        value: postgres-secret
+      - name: SECRET_KEY
+        value: database_uri
+    runAfter:
+      - git-clone
+    taskRef:
+      kind: Task
+      name: green
+    workspaces:
+      - name: source
+        workspace: pipeline-workspace
