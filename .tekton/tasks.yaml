@@ -1,0 +1,67 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: lint
+  labels:
+    app.kubernetes.io/version: "0.4"
+  annotations:
+    tekton.dev/categories: Code Quality
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/tags: python, flake8, pylint
+    tekton.dev/displayName: "flake8 + pylint"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  workspaces:
+    - name: source
+      description: The workspace containing the source code.
+  description: >-
+    Runs flake8 and pylint for Python code quality checks.
+    Automatically installs dependencies from requirements.txt.
+  params:
+    - name: image
+      description: Python image used to run linting
+      default: python:3.11-slim
+    - name: path
+      description: The directory to lint
+      default: "."
+      type: string
+    - name: args
+      description: Additional arguments for pylint
+      type: array
+      default: ["--max-line-length=127"]
+    - name: requirements-file
+      description: Python dependencies file
+      default: "requirements.txt"
+  steps:
+    - name: flake8
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+        export PATH=$PATH:$HOME/.local/bin:
+
+        echo "***** Installing dependencies *****"
+        python -m pip install --upgrade pip
+        if [ -e "$(params.requirements-file)" ]; then
+          pip install -r "$(params.requirements-file)"
+        fi
+        pip install flake8
+
+        echo "***** Running flake8 *****"
+        flake8 $(params.path) --max-line-length=127 --count --statistics
+
+    - name: pylint
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+        export PATH=$PATH:$HOME/.local/bin:
+
+        echo "***** Ensuring pylint is installed *****"
+        python -m pip install pylint
+
+        echo "***** Running pylint *****"
+        pylint $(params.args) service tests || true
