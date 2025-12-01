@@ -110,5 +110,20 @@ spec:
           workspaces:
           - name: source
             workspace: products-pipline-workspace
-  workspaces:
-    - name: products-pipline-workspace
+            
+        - name: testing
+          params:
+          - name: ARGS
+            value: $(params.GREEN_ARGS)
+          - name: SECRET_NAME
+            value: postgres-secret
+          - name: SECRET_KEY
+            value: database_uri
+          runAfter:
+            - git-clone
+          taskRef:
+            kind: Task
+            name: green
+          workspaces:
+      - name: source
+        workspace: products-pipline-workspace
