@@ -1,8 +1,8 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  creationTimestamp: '2025-11-29T16:30:51Z'
-  generation: 1
+  creationTimestamp: '2025-11-13T00:35:47Z'
+  generation: 4
   managedFields:
     - apiVersion: tekton.dev/v1
       fieldsType: FieldsV1
@@ -15,11 +15,11 @@ metadata:
           'f:workspaces': {}
       manager: Mozilla
       operation: Update
-      time: '2025-11-29T16:30:51Z'
-  name: products-pipline
+      time: '2025-11-13T01:00:30Z'
+  name: cd-pipeline
   namespace: luoashley-dev
-  resourceVersion: '6773862185'
-  uid: 16116565-fb9a-45fe-ad15-6109eef40a78
+  resourceVersion: '6636526634'
+  uid: 9a287208-21ae-4d85-92e3-727d0a954f39
 spec:
   params:
     - description: The URL to the git repo
@@ -29,21 +29,14 @@ spec:
       description: The reference (branch or ref)
       name: GIT_REF
       type: string
-      # testing
-  - default: '-vvv --processes=1 --run-coverage --minimum-coverage=95'
-    description: Arguments for green testing
-    name: GREEN_ARGS
-    type: string
-  - default: products
-    description: Name of the application
-    name: APP_NAME
-    type: string
-  - default: >-
-      image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest
-    description: The name of the image to build
-    name: IMAGE_NAME
-    type: string
-    
+    - default: petshop
+      description: Name of the application
+      name: APP_NAME
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:5000/$ (context.pipelineRun.namespace)/$(params.APP_NAME):lates'
+      description: The name of the image to build
+      name: IMAGE_NAME
+      type: string
   tasks:
     - name: git-clone
       params:
@@ -88,42 +81,94 @@ spec:
         resolver: cluster
       workspaces:
         - name: output
-          workspace: products-pipline-workspace
-          
-        - name: pylint
-          params:
-          - name: image
-            value: 'docker.io/rofrano/nyu-devops-base:fa25'
-          - name: path
-            value: service
-          - name: requirements_file
-            value: requirements.txt
-          - name: args
-          value: ["--max-line-length=127"]
-          - name: pip_conf_file
-          value: pip.conf
-          runAfter:
-          - git-clone
-          taskRef:
-            kind: Task
-            name: pylint
-          workspaces:
-          - name: source
-            workspace: products-pipline-workspace
-            
-        - name: testing
-          params:
-          - name: ARGS
-            value: $(params.GREEN_ARGS)
-          - name: SECRET_NAME
-            value: postgres-secret
-          - name: SECRET_KEY
-            value: database_uri
-          runAfter:
-            - git-clone
-          taskRef:
-            kind: Task
-            name: green
-          workspaces:
-      - name: source
-        workspace: products-pipline-workspace
+          workspace: pipeline-workspace
+    - name: pylint
+      params:
+        - name: image
+          value: 'quay.io/rofrano/python:3.11-slim'
+        - name: path
+          value: service
+        - name: args
+          value: []
+        - name: requirements-file
+          value: requirements.txt
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pylint
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: testing
+      params:
+        - name: pytest-args
+          value: []
+        - name: secret-name
+          value: postgres-creds
+        - name: secret-key
+          value: database_uri
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pytest-env
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: buildah
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_NAME)
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: BUILD_ARGS
+          value:
+            - ''
+        - name: CONTEXT
+          value: .
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: FORMAT
+          value: oci
+        - name: BUILD_EXTRA_ARGS
+          value: ''
+        - name: PUSH_EXTRA_ARGS
+          value: ''
+        - name: SKIP_PUSH
+          value: 'false'
+        - name: TLS_VERIFY
+          value: 'true'
+        - name: VERBOSE
+          value: 'false'
+      runAfter:
+        - pylint
+        - testing
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: deploy-image
+      params:
+        - name: image-name
+          value: $(params.IMAGE_NAME)
+        - name: manifest-dir
+          value: k8s
+      runAfter:
+        - buildah
+      taskRef:
+        kind: Task
+        name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+  workspaces:
+    - name: pipeline-workspace
