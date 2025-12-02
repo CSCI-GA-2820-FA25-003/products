@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   creationTimestamp: '2025-11-29T16:30:51Z'
-  generation: 1
+  generation: 2
   managedFields:
     - apiVersion: tekton.dev/v1
       fieldsType: FieldsV1
@@ -15,10 +15,10 @@ metadata:
           'f:workspaces': {}
       manager: Mozilla
       operation: Update
-      time: '2025-11-29T16:30:51Z'
+      time: '2025-12-02T19:01:53Z'
   name: products-pipline
   namespace: luoashley-dev
-  resourceVersion: '6773862185'
+  resourceVersion: '6794613424'
   uid: 16116565-fb9a-45fe-ad15-6109eef40a78
 spec:
   params:
@@ -73,6 +73,24 @@ spec:
         resolver: cluster
       workspaces:
         - name: output
+          workspace: products-pipline-workspace
+    - name: pylint
+      params:
+        - name: image
+          value: 'quay.io/rofrano/python:3.11-slim'
+        - name: path
+          value: service
+        - name: args
+          value: []
+        - name: requirements-file
+          value: requirements.txt
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pylint
+      workspaces:
+        - name: source
           workspace: products-pipline-workspace
   workspaces:
     - name: products-pipline-workspace
