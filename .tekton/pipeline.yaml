@@ -1,3 +1,25 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  creationTimestamp: '2025-11-29T16:30:51Z'
+  generation: 2
+  managedFields:
+    - apiVersion: tekton.dev/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:spec':
+          .: {}
+          'f:finally': {}
+          'f:params': {}
+          'f:tasks': {}
+          'f:workspaces': {}
+      manager: Mozilla
+      operation: Update
+      time: '2025-12-02T19:01:53Z'
+  name: products-pipline
+  namespace: luoashley-dev
+  resourceVersion: '6794613424'
+  uid: 16116565-fb9a-45fe-ad15-6109eef40a78
 spec:
   params:
     - description: The URL to the git repo
@@ -52,7 +74,6 @@ spec:
       workspaces:
         - name: output
           workspace: products-pipline-workspace
-
     - name: pylint
       params:
         - name: image
@@ -71,6 +92,5 @@ spec:
       workspaces:
         - name: source
           workspace: products-pipline-workspace
-
   workspaces:
     - name: products-pipline-workspace
