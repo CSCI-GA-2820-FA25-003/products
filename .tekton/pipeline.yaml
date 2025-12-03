@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   creationTimestamp: '2025-11-29T16:30:51Z'
-  generation: 2
+  generation: 3
   managedFields:
     - apiVersion: tekton.dev/v1
       fieldsType: FieldsV1
@@ -15,10 +15,10 @@ metadata:
           'f:workspaces': {}
       manager: Mozilla
       operation: Update
-      time: '2025-12-02T19:01:53Z'
+      time: '2025-12-03T04:51:03Z'
   name: products-pipline
   namespace: luoashley-dev
-  resourceVersion: '6794613424'
+  resourceVersion: '6797366658'
   uid: 16116565-fb9a-45fe-ad15-6109eef40a78
 spec:
   params:
@@ -28,6 +28,14 @@ spec:
     - default: master
       description: The reference (branch or ref)
       name: GIT_REF
+      type: string
+    - default: products
+      description: Name of the application
+      name: APP_NAME
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:5000/$ (context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+      description: The name of the image to build
+      name: IMAGE_NAME
       type: string
   tasks:
     - name: git-clone
@@ -89,6 +97,45 @@ spec:
       taskRef:
         kind: Task
         name: pylint
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
+    - name: buildah
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_NAME)
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: BUILD_ARGS
+          value:
+            - ''
+        - name: CONTEXT
+          value: .
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: FORMAT
+          value: oci
+        - name: BUILD_EXTRA_ARGS
+          value: ''
+        - name: PUSH_EXTRA_ARGS
+          value: ''
+        - name: SKIP_PUSH
+          value: 'false'
+        - name: TLS_VERIFY
+          value: 'true'
+        - name: VERBOSE
+          value: 'false'
+      runAfter:
+        - pylint
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
       workspaces:
         - name: source
           workspace: products-pipline-workspace
