@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   creationTimestamp: '2025-11-29T16:30:51Z'
-  generation: 3
+  generation: 8
   managedFields:
     - apiVersion: tekton.dev/v1
       fieldsType: FieldsV1
@@ -15,10 +15,10 @@ metadata:
           'f:workspaces': {}
       manager: Mozilla
       operation: Update
-      time: '2025-12-03T04:51:03Z'
+      time: '2025-12-03T19:48:01Z'
   name: products-pipline
   namespace: luoashley-dev
-  resourceVersion: '6797366658'
+  resourceVersion: '6801575282'
   uid: 16116565-fb9a-45fe-ad15-6109eef40a78
 spec:
   params:
@@ -150,6 +150,22 @@ spec:
       taskRef:
         kind: Task
         name: deploy-image
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
+    - name: behave
+      params:
+        - name: base-url
+          value: 'https://products-luoashley-dev.apps.sandbox-m3.1530.p1.openshiftapps.com/'
+        - name: wait-seconds
+          value: '60'
+        - name: driver
+          value: chrome
+      runAfter:
+        - deploy-image
+      taskRef:
+        kind: Task
+        name: behave
       workspaces:
         - name: source
           workspace: products-pipline-workspace
