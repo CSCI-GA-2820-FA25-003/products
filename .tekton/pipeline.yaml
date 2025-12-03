@@ -139,5 +139,19 @@ spec:
       workspaces:
         - name: source
           workspace: products-pipline-workspace
+    - name: deploy-image
+      params:
+        - name: image-name
+          value: $(params.IMAGE_NAME)
+        - name: manifest-dir
+          value: k8s
+      runAfter:
+        - buildah
+      taskRef:
+        kind: Task
+        name: deploy-image
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
   workspaces:
     - name: products-pipline-workspace
