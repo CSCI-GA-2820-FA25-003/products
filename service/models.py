@@ -3,8 +3,8 @@ Models for Products
 
 All of the models are stored in this module
 """
+
 import logging
-from enum import Enum
 from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
@@ -105,8 +105,12 @@ class Products(db.Model):
             "availability": self.availability,
             "favorited": self.favorited,
             "discontinued": self.discontinued,
-            "created_date": self.created_date.isoformat() if self.created_date else None,
-            "updated_date": self.updated_date.isoformat() if self.updated_date else None,
+            "created_date": (
+                self.created_date.isoformat() if self.created_date else None
+            ),
+            "updated_date": (
+                self.updated_date.isoformat() if self.updated_date else None
+            ),
         }
 
     def deserialize(self, data):
