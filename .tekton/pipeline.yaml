@@ -165,5 +165,21 @@ spec:
       workspaces:
         - name: source
           workspace: products-pipline-workspace
+    - name: testing
+      params:
+        - name: pytest-args
+          value: []
+        - name: secret-name
+          value: postgres-creds
+        - name: secret-key
+          value: database_uri
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pytest-env
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
   workspaces:
     - name: products-pipline-workspace
