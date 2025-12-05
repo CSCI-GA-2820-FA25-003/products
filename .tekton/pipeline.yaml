@@ -1,5 +1,6 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
+metadata:
   name: products-pipline
 spec:
   params:
