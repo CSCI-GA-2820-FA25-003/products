@@ -19,8 +19,9 @@ Module: error_handlers
 # from flask import jsonify
 from flask import current_app as app  # Import Flask application
 from service.routes import api
-from service.models import DataValidationError, DatabaseConnectionError
+from service.models import DataValidationError
 from . import status
+
 
 ######################################################################
 # Error Handlers
@@ -35,6 +36,7 @@ def request_validation_error(error):
         "error": "Bad Request",
         "message": message,
     }, status.HTTP_400_BAD_REQUEST
+
 
 # Optional
 # @api.errorhandler(DatabaseConnectionError)
