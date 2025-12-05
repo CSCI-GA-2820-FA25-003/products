@@ -1,25 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  creationTimestamp: '2025-11-29T16:30:51Z'
-  generation: 8
-  managedFields:
-    - apiVersion: tekton.dev/v1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          .: {}
-          'f:finally': {}
-          'f:params': {}
-          'f:tasks': {}
-          'f:workspaces': {}
-      manager: Mozilla
-      operation: Update
-      time: '2025-12-03T19:48:01Z'
   name: products-pipline
-  namespace: luoashley-dev
-  resourceVersion: '6801575282'
-  uid: 16116565-fb9a-45fe-ad15-6109eef40a78
 spec:
   params:
     - description: The URL to the git repo
@@ -181,6 +163,22 @@ spec:
       taskRef:
         kind: Task
         name: behave
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
+    - name: testing
+      params:
+        - name: pytest-args
+          value: []
+        - name: secret-name
+          value: postgres-creds
+        - name: secret-key
+          value: database_uri
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pytest-env
       workspaces:
         - name: source
           workspace: products-pipline-workspace
