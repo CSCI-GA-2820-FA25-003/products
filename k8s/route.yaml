@@ -1,0 +1,21 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: products
+  namespace: luoashley-dev
+  labels:
+    app: products
+    app.kubernetes.io/name: products
+    app.kubernetes.io/part-of: products-service
+spec:
+  to:
+    kind: Service
+    name: products
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
