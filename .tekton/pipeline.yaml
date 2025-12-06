@@ -15,7 +15,7 @@ spec:
       description: Name of the application
       name: APP_NAME
       type: string
-    - default: 'image-registry.openshift-image-registry.svc:5000/$ (context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+    - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
       description: The name of the image to build
       name: IMAGE_NAME
       type: string
@@ -64,38 +64,6 @@ spec:
       workspaces:
         - name: output
           workspace: products-pipline-workspace
-    - name: pylint
-      params:
-        - name: image
-          value: 'quay.io/rofrano/python:3.11-slim'
-        - name: path
-          value: service
-        - name: args
-          value: []
-        - name: requirements-file
-          value: requirements.txt
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pylint
-      workspaces:
-        - name: source
-          workspace: products-pipline-workspace
-    - name: pytest
-      params:
-        - name: image
-          value: 'quay.io/rofrano/python:3.11-slim'
-        - name: args
-          value: []
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pytest
-      workspaces:
-        - name: source
-          workspace: products-pipline-workspace
     - name: buildah
       params:
         - name: IMAGE
@@ -123,7 +91,7 @@ spec:
           value: 'false'
       runAfter:
         - pylint
-        - pytest
+        - pytest-env
       taskRef:
         params:
           - name: kind
@@ -166,7 +134,25 @@ spec:
       workspaces:
         - name: source
           workspace: products-pipline-workspace
-    - name: testing
+    - name: pylint
+      params:
+        - name: image
+          value: 'quay.io/rofrano/python:3.11-slim'
+        - name: path
+          value: service
+        - name: args
+          value: []
+        - name: requirements-file
+          value: requirements.txt
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pylint
+      workspaces:
+        - name: source
+          workspace: products-pipline-workspace
+    - name: pytest-env
       params:
         - name: pytest-args
           value: []
