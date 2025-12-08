@@ -19,7 +19,7 @@ spec:
       description: The name of the image to build
       name: IMAGE_NAME
       type: string
-    - default: 'https://products-luoashley-dev.apps.sandbox-m3.1530.p1.openshiftapps.com'
+    - default: 'https://products-luoashley-dev.apps.rm3.7wse.p1.openshiftapps.com/'
       description: The external route URL for the deployed service (used for BDD testing)
       name: ROUTE_URL
       type: string

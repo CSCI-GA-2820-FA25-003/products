@@ -220,22 +220,12 @@ Kubernetes liveness/readiness probe endpoint.
    cd products
    ```
 
-2. **Set up environment variables**
+2. **Open in VSCODE**
    ```bash
-   cp dot-env-example .env
+   code .
    ```
 
-3. **Install dependencies**
-   ```bash
-   pipenv install --dev
-   ```
-
-4. **Activate the virtual environment**
-   ```bash
-   pipenv shell
-   ```
-
-5. **Initialize the database** (first-time setup)
+3. **Initialize the database** (first-time setup)
    ```bash
    flask db-create
    ```
@@ -357,17 +347,24 @@ pylint service tests --max-line-length=127
    ```
 
 ### Production Deployment (OpenShift)
+1. **Log in your account**
+   ```bash
+   oc login *****
+   ```
 
-The service is deployed on Red Hat OpenShift with the following configuration:
+2. **Apply PostgreSQL resources**
+   ```bash
+   oc apply -f k8s/postgres/
+   ```
 
-- **Replicas**: 2 (high availability)
-- **Rolling Update Strategy**: Zero downtime deployments
-- **Health Probes**: Liveness and readiness checks via `/api/health`
-- **Resource Limits**: CPU (0.5 cores) and Memory (128Mi)
-- **PostgreSQL Backend**: Deployed as StatefulSet with persistent storage
-- **External Access**: HTTPS route with automatic redirect
+3. **Apply Tekton tasks, pipeline, routes, triggers and workspace(please update default ROUTE_URL)**
+   ```bash
+   oc apply -f .tekton/
+   ```
 
-**Deployed Service**: `https://products-luoashley-dev.apps.sandbox-m3.1530.p1.openshiftapps.com`
+The service is already deployed on Red Hat OpenShift.
+
+**Deployed Service**: `https://products-luoashley-dev.apps.rm3.7wse.p1.openshiftapps.com/`
 
 ### Kubernetes Manifests
 
@@ -481,10 +478,18 @@ Automated deployment pipeline on OpenShift:
 ├── .github/
 │   └── workflows/
 │       └── ci.yml              # GitHub Actions CI workflow
-├── .tekton/                    # Tekton pipeline manifests
-│   ├── pipeline.yaml
-│   ├── tasks.yaml
-│   └── workspace.yaml
+├── .tekton/                         # Tekton pipeline manifests
+│   ├── events/                      # Event listener & trigger configs
+│   │   ├── event_listener.yaml      # Tekton EventListener definition
+│   │   ├── trigger_binding.yaml     # TriggerBinding mapping incoming payload
+│   │   ├── trigger_template.yaml    # TriggerTemplate defining PipelineRun
+│   │   └── trigger.yaml             # Trigger definition connecting all pieces
+│   ├── listenerroute.yaml           # Route for EventListener service
+│   ├── pipeline.yaml                # Main Tekton Pipeline definition
+│   ├── productsroute.yaml           # Route for product service handling
+│   ├── tasks.yaml                   # Tekton Task definitions
+│   └── workspace.yaml               # Workspace & PVC configuration
+
 ├── k8s/                        # Kubernetes manifests
 │   ├── deployment.yaml
 │   ├── service.yaml
