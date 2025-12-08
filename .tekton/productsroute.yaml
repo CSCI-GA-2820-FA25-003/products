@@ -3,7 +3,6 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: products
-  namespace: luoashley-dev
   labels:
     app: products
     app.kubernetes.io/name: products
