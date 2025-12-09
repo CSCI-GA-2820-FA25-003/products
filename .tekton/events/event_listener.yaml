@@ -5,4 +5,14 @@ metadata:
 spec:
   serviceAccountName: pipeline
   triggers:
-    - triggerRef: cd-trigger
+    - name: cd-trigger
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.ref == 'refs/heads/master'"
+      bindings:
+        - ref: cd-binding
+      template:
+        ref: cd-template
