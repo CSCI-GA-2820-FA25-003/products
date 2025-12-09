@@ -1,7 +1,7 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: cd-pipline
+  name: cd-pipeline
 spec:
   to:
     name: el-cd-listener
