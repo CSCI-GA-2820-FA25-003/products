@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: products-pipline
+  name: products-pipeline
 spec:
   params:
     - description: The URL to the git repo
@@ -21,7 +21,7 @@ spec:
       type: string
     - default: 'https://products-luoashley-dev.apps.rm3.7wse.p1.openshiftapps.com/'
       description: The external route URL for the deployed service (used for BDD testing)
-      name: ROUTE_URL
+      name: BASE_URL
       type: string
   tasks:
     - name: git-clone
@@ -67,7 +67,7 @@ spec:
         resolver: cluster
       workspaces:
         - name: output
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
     - name: buildah
       params:
         - name: IMAGE
@@ -107,7 +107,7 @@ spec:
         resolver: cluster
       workspaces:
         - name: source
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
     - name: deploy-image
       params:
         - name: image-name
@@ -121,11 +121,11 @@ spec:
         name: deploy-image
       workspaces:
         - name: source
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
     - name: behave
       params:
         - name: base-url
-          value: $(params.ROUTE_URL)
+          value: $(params.BASE_URL)
         - name: wait-seconds
           value: '60'
         - name: driver
@@ -137,7 +137,7 @@ spec:
         name: behave
       workspaces:
         - name: source
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
     - name: pylint
       params:
         - name: image
@@ -155,7 +155,7 @@ spec:
         name: pylint
       workspaces:
         - name: source
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
     - name: pytest-env
       params:
         - name: pytest-args
@@ -171,6 +171,6 @@ spec:
         name: pytest-env
       workspaces:
         - name: source
-          workspace: products-pipline-workspace
+          workspace: products-pipeline-workspace
   workspaces:
-    - name: products-pipline-workspace
+    - name: products-pipeline-workspace
